@@ -130,7 +130,7 @@ onMounted(() => {
           v-model="iframeInputUrl"
           @keydown.enter="applyCustomUrl"
           type="text"
-          placeholder="http://localhost:5173/#download"
+          placeholder="https://yourwebsite.com/contact"
           class="flex-1 bg-dark-800 text-dark-200 text-xs rounded-lg px-3 py-1.5 border border-dark-700 focus:border-primary-500 focus:outline-none"
         />
         <button

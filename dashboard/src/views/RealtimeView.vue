@@ -17,8 +17,10 @@ function connect() {
 
   connectionStatus.value = "connecting";
 
-  // WebSocket connects to the server (port 3100), not the dashboard
-  const serverHost = import.meta.env.VITE_WS_URL || "ws://localhost:3100";
+  // Use current host for WebSocket to support both local and remote deployments
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const serverHost =
+    import.meta.env.VITE_WS_URL || `${protocol}//${window.location.host}`;
   const wsUrl = `${serverHost}/ws?websiteId=${ws.currentId}`;
 
   try {
