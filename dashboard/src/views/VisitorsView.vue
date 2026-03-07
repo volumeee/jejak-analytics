@@ -172,7 +172,7 @@ function getChartData() {
               </td>
             </tr>
           </tbody>
-          <tbody v-else>
+          <tbody v-else-if="data.length > 0">
             <tr
               v-for="(item, i) in data"
               :key="item.value"
@@ -190,6 +190,22 @@ function getChartData() {
               </td>
               <td class="py-2.5 text-right text-dark-400">
                 {{ parseInt(item.visitors).toLocaleString() }}
+              </td>
+            </tr>
+          </tbody>
+          <tbody v-else>
+            <tr>
+              <td
+                colspan="3"
+                class="py-16 text-center text-dark-500 animate-fade-in"
+              >
+                <div class="flex justify-center mb-3 text-2xl opacity-50">
+                  🧭
+                </div>
+                <div class="font-medium text-dark-300 tracking-wide mb-1">
+                  No visitor data
+                </div>
+                <div class="text-xs">No entries found for this category.</div>
               </td>
             </tr>
           </tbody>
