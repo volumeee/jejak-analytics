@@ -37,7 +37,7 @@ Add this script tag before `</body>` in your HTML:
 ```html
 <script
   defer
-  src="http://localhost:3100/tracker.js"
+  src="http://localhost:3100/jejak.js"
   data-website-id="YOUR_WEBSITE_ID"
   data-api="http://localhost:3100"
   data-heatmap="true"
@@ -102,7 +102,7 @@ if (variant === "A") {
 
 | Method | Endpoint                   | Auth | Description               |
 | ------ | -------------------------- | ---- | ------------------------- |
-| POST   | `/api/collect`             | No   | Data collection (tracker) |
+| POST   | `/api/event`               | No   | Data collection (tracker) |
 | POST   | `/api/auth/login`          | No   | Dashboard login           |
 | GET    | `/api/stats/overview`      | JWT  | KPI overview              |
 | GET    | `/api/stats/timeseries`    | JWT  | Traffic chart data        |

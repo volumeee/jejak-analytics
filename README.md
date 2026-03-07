@@ -38,7 +38,7 @@ Add this tag to your website's `<head>`:
 ```html
 <script
   defer
-  src="http://your-server:3100/tracker.js"
+  src="http://your-server:3100/jejak.js"
   data-website-id="YOUR_WEBSITE_ID"
   data-api="http://your-server:3100"
 ></script>
@@ -93,7 +93,7 @@ Full documentation with Indonesian translation is available inside the **Dashboa
 
 | Method | Endpoint                   | Auth | Description               |
 | ------ | -------------------------- | ---- | ------------------------- |
-| POST   | `/api/collect`             | No   | Data collection (tracker) |
+| POST   | `/api/event`               | No   | Data collection (tracker) |
 | POST   | `/api/auth/login`          | No   | Dashboard login           |
 | GET    | `/api/stats/overview`      | JWT  | KPI overview              |
 | GET    | `/api/stats/timeseries`    | JWT  | Traffic chart data        |

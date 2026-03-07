@@ -36,8 +36,8 @@ export function initSessionRecording(opts: { sampleRate?: number } = {}): void {
         }
       },
       maskAllInputs: true,
-      blockClass: 'jj-block', // Elements with class "jj-block" (or legacy "pa-block") won't be recorded
-      ignoreClass: 'pa-block', // Keep backward compatibility for ignoring elements
+      blockClass: 'jj-block', // Elements with class "jj-block" won't be recorded
+      ignoreClass: 'jj-block',
       sampling: {
         mousemove: false,    // Don't record mouse movement (too much data)
         mouseInteraction: true,
@@ -75,7 +75,8 @@ async function loadRrweb(): Promise<any | null> {
     // Dynamically load rrweb via script tag to keep base tracker small
     return await new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/rrweb@2.0.0-alpha.13/dist/record/rrweb-record.min.js';
+      const apiUrl = (window as any).Jejak?.apiUrl || '';
+      script.src = `${apiUrl}/lib/rrweb.js`;
       script.onload = () => resolve((window as any).rrweb);
       script.onerror = () => reject(new Error('Failed to load rrweb'));
       document.head.appendChild(script);

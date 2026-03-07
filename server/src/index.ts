@@ -66,7 +66,7 @@ app.get('/api/health', async (_req, res) => {
 // ── API Routes ───────────────────────────────────
 app.use('/api/auth', authRouter);
 app.use('/api/websites', websitesRouter);
-app.use('/api/collect', collectRouter);
+app.use('/api/event', collectRouter); // Stealth: rename from /collect
 app.use('/api/stats', statsRouter);
 app.use('/api/sessions', sessionsRouter);
 app.use('/api/heatmaps', heatmapsRouter);
@@ -77,6 +77,9 @@ app.use('/api/errors', errorsRouter);
 app.use('/api/export', exportRouter);
 app.use('/api/share', shareRouter);
 
+// ── Serve static libraries (Stealth rrweb) ───────
+app.use('/lib', express.static(path.join(process.cwd(), 'public/lib')));
+
 // ── Serve tracker script (static) ────────────────
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -85,18 +88,25 @@ import fs from 'node:fs';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Try multiple paths: monorepo dev, Docker production
 const trackerPaths = [
-  path.join(__dirname, '../../tracker/dist/tracker.js'),  // dev: server/src -> tracker/dist
-  path.join(process.cwd(), '../tracker/dist/tracker.js'), // dev: from server/
-  path.join(process.cwd(), 'public/tracker.js'),          // Docker: /app/public/
+  path.join(__dirname, '../../tracker/dist/jejak.js'),    // dev: server/src -> tracker/dist
+  path.join(process.cwd(), '../tracker/dist/jejak.js'),   // dev: from server/
+  path.join(process.cwd(), 'public/jejak.js'),            // Docker: /app/public/
 ];
 const trackerPath = trackerPaths.find(p => fs.existsSync(p));
-if (trackerPath) {
-  app.get('/tracker.js', (_req, res) => {
-    res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
+
+// Support both names for transition
+const serveTracker = (req: express.Request, res: express.Response) => {
+  res.setHeader('Content-Type', 'application/javascript');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  if (trackerPath) {
     res.sendFile(trackerPath);
-  });
-}
+  } else {
+    res.status(404).send('console.error("Jejak: Tracker script not found.");');
+  }
+};
+
+app.get('/jejak.js', serveTracker);
+app.get('/tracker.js', serveTracker); // Legacy support
 
 // ── Error handler ────────────────────────────────
 app.use(errorMiddleware);
@@ -133,7 +143,7 @@ async function start() {
     await initDatabase();
 
     server.listen(config.port, () => {
-      const trackerUrl = `http://localhost:${config.port}/tracker.js`;
+      const trackerUrl = `http://localhost:${config.port}/jejak.js`;
       const isTrackerActive = fs.existsSync(trackerPath || '');
 
       console.log(`

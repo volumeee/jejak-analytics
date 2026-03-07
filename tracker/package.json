@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "main": "dist/tracker.js",
+  "main": "dist/jejak.js",
   "scripts": {
     "build": "rollup -c",
     "build:watch": "rollup -c -w"

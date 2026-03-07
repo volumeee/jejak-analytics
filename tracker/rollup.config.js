@@ -5,7 +5,7 @@ import terser from "@rollup/plugin-terser";
 export default {
   input: "src/index.ts",
   output: {
-    file: "dist/tracker.js",
+    file: "dist/jejak.js",
     format: "iife",
     name: "Jejak",
     exports: "named",

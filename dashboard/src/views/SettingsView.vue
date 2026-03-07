@@ -45,7 +45,7 @@ const currentApiUrl = computed(() => {
 
 function getTrackerSnippet(websiteId: string): string {
   const apiUrl = currentApiUrl.value;
-  return `<script defer src="${apiUrl}/tracker.js"
+  return `<script defer src="${apiUrl}/jejak.js"
   data-website-id="${websiteId}"
   data-api="${apiUrl}"
   data-heatmap="true"
@@ -60,14 +60,17 @@ function getTrackerSnippet(websiteId: string): string {
   <div class="space-y-8 mx-auto pb-20 animate-fade-in">
     <!-- Header with Language Toggle -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-dark-800 pb-6">
-      <!-- <div>
+      <div>
         <h2 class="text-2xl font-black text-dark-100 uppercase tracking-tight">
           {{ lang === 'en' ? 'Settings & Setup' : 'Pengaturan & Setup' }}
         </h2>
-        <p class="text-dark-400 mt-1">
-          {{ lang === 'en' ? 'Manage your websites and integration guides' : 'Kelola website dan panduan integrasi Anda' }}
-        </p>
-      </div> -->
+        <div class="flex items-center gap-2 mt-1">
+          <span class="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase">Stealth Mode On</span>
+          <p class="text-dark-400 text-xs">
+            {{ lang === 'en' ? 'Anti-adblock features enabled' : 'Fitur anti-adblock diaktifkan' }}
+          </p>
+        </div>
+      </div>
       
       <button 
         @click="toggleLang"
@@ -167,8 +170,8 @@ function getTrackerSnippet(websiteId: string): string {
           
           <p class="text-dark-400 text-sm mb-4 leading-relaxed">
             {{ lang === 'en' 
-              ? 'Copy and paste this script tag into the <head> of your website.' 
-              : 'Salin dan tempel tag script ini ke dalam <head> website Anda.' 
+              ? 'Copy and paste this script tag into the <head> of your website. We use jejak.js (non-tracker name) to bypass aggressive ad-blockers.' 
+              : 'Salin dan tempel tag script ini ke dalam <head> website Anda. Kami menggunakan jejak.js (nama non-tracker) untuk melewati ad-blocker agresif.' 
             }}
           </p>
 

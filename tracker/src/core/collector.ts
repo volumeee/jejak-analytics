@@ -74,7 +74,7 @@ function flush(): void {
   // Use fetch for normal flushes (to get sessionId back)
   if (isUnloading && navigator.sendBeacon) {
     const blob = new Blob([payload], { type: 'application/json' });
-    navigator.sendBeacon(`${apiUrl}/api/collect`, blob);
+    navigator.sendBeacon(`${apiUrl}/api/event`, blob);
   } else {
     fetchSend(payload);
   }
@@ -83,7 +83,7 @@ function flush(): void {
 let sessionIdResolvers: ((id: string) => void)[] = [];
 
 export function getSessionId(): string {
-  return sessionId || localStorage.getItem('pa_session_id') || '';
+  return sessionId || localStorage.getItem('jj_session_id') || '';
 }
 
 /** 
@@ -105,7 +105,7 @@ export async function waitForSessionId(): Promise<string> {
 }
 
 function fetchSend(payload: string): void {
-  fetch(`${apiUrl}/api/collect`, {
+  fetch(`${apiUrl}/api/event`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: payload,
@@ -115,7 +115,7 @@ function fetchSend(payload: string): void {
       res.json().then(data => {
         if (data.sessionId) {
           sessionId = data.sessionId;
-          localStorage.setItem('pa_session_id', sessionId);
+          localStorage.setItem('jj_session_id', sessionId);
           // Resolve waiters
           const resolvers = [...sessionIdResolvers];
           sessionIdResolvers = [];
