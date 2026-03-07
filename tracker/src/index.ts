@@ -5,7 +5,7 @@
  * ╚═══════════════════════════════════════════════════╝
  *
  * Usage (Script Tag):
- *   <script defer src="https://your-server/tracker.js"
+ *   <script defer src="https://your-server/jejak.js"
  *           data-website-id="YOUR_ID"
  *           data-api="https://your-server"></script>
  *
@@ -52,13 +52,12 @@ function init(options: InitOptions): void {
   // Initialize collector (event queue + batching)
   initCollector({ apiUrl, websiteId: options.websiteId, fingerprint });
   
-  // Set global state for modules (support both Jejak and legacy PosinAnalytics)
+  // Set global state for modules
   const globalState = {
     apiUrl,
     websiteId: options.websiteId
   };
   (window as any).Jejak = { ...(window as any).Jejak, ...globalState };
-  (window as any).PosinAnalytics = { ...(window as any).PosinAnalytics, ...globalState };
 
   // Core: page view tracking (always on)
   initPageviewTracking();

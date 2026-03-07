@@ -21,7 +21,7 @@ export async function getVariant(testId: string): Promise<string | null> {
     const sessionId = await waitForSessionId();
     if (!sessionId) return null;
 
-    const apiUrl = (window as any).Jejak?.apiUrl || (window as any).PosinAnalytics?.apiUrl || '';
+    const apiUrl = (window as any).Jejak?.apiUrl || '';
     if (!apiUrl) return null;
 
     const res = await fetch(`${apiUrl}/api/ab-tests/assign`, {
@@ -61,11 +61,11 @@ export async function initABTracking(): Promise<void> {
 }
 
 async function processElements() {
-  const elements = document.querySelectorAll<HTMLElement>('[data-jj-ab-test]:not([data-jj-ab-processed]), [data-pa-ab-test]:not([data-pa-ab-processed])');
+  const elements = document.querySelectorAll<HTMLElement>('[data-jj-ab-test]:not([data-jj-ab-processed])');
   if (elements.length === 0) return;
 
   for (const el of Array.from(elements)) {
-    const testId = el.getAttribute('data-jj-ab-test') || el.getAttribute('data-pa-ab-test');
+    const testId = el.getAttribute('data-jj-ab-test');
     if (!testId) continue;
 
     const variant = await getVariant(testId);
@@ -73,9 +73,8 @@ async function processElements() {
 
     // Mark as processed so we don't handle it again
     el.setAttribute('data-jj-ab-processed', 'true');
-    el.setAttribute('data-pa-ab-processed', 'true');
 
-    const elementVariant = el.getAttribute('data-jj-ab-variant') || el.getAttribute('data-pa-ab-variant');
+    const elementVariant = el.getAttribute('data-jj-ab-variant');
     if (elementVariant && elementVariant !== variant) {
       el.style.display = 'none';
       el.setAttribute('aria-hidden', 'true');

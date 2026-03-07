@@ -87,7 +87,7 @@ const collectSchema = z.object({
 // Rate limit: 200 requests/min for collection endpoint
 router.use(createRateLimiter(config.rateLimit.collect.windowMs, config.rateLimit.collect.max));
 
-// ── POST /api/collect ────────────────────────────
+// ── POST /api/event ──────────────────────────────
 router.post('/', async (req: Request, res: Response) => {
   try {
     const body = collectSchema.parse(req.body);
