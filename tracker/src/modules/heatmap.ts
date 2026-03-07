@@ -15,6 +15,20 @@ export function initHeatmapTracking(): void {
   if (enabled) return;
   enabled = true;
 
+  // Synchronize dynamic document height with parent if running inside Jejak Dashboard
+  if (window.parent !== window) {
+    const reportHeight = () => {
+      window.parent.postMessage({
+        type: 'jejak_iframe_height',
+        height: document.documentElement.scrollHeight
+      }, '*');
+    };
+    window.addEventListener('load', reportHeight);
+    window.addEventListener('resize', reportHeight);
+    setInterval(reportHeight, 2000); // Fail-safe for SPAs
+    reportHeight();
+  }
+
   // Track clicks
   document.addEventListener('click', (e) => {
     const x = e.pageX / document.documentElement.scrollWidth;

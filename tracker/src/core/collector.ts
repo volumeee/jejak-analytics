@@ -24,6 +24,8 @@ export function initCollector(opts: { apiUrl: string; websiteId: string; fingerp
     if (document.visibilityState === 'hidden') {
       isUnloading = true;
       flush();
+    } else {
+      isUnloading = false;
     }
   });
 

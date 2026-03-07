@@ -86,8 +86,22 @@ function applyCustomUrl() {
 watch([() => ws.currentId, () => ds.start, () => ds.end], fetchPages);
 watch([selectedPage, deviceType, () => ds.start, () => ds.end], fetchHeatmap);
 
+const iframeHeight = ref(2000); // Default placeholder
+const iframeKey = ref(0);
+
 onMounted(() => {
   fetchPages().then(fetchHeatmap);
+
+  // Listen for the dynamic height updates from the tracker inside the iframe
+  window.addEventListener("message", (e) => {
+    if (
+      e.data &&
+      e.data.type === "jejak_iframe_height" &&
+      e.data.height > 500
+    ) {
+      iframeHeight.value = e.data.height;
+    }
+  });
 });
 </script>
 
@@ -170,40 +184,40 @@ onMounted(() => {
 
     <!-- Heatmap Viewer -->
     <div
-      class="glass-card overflow-hidden relative"
+      class="glass-card overflow-auto relative rounded-b-xl"
       style="height: calc(100vh - 280px)"
     >
       <!-- Loading State -->
       <div
         v-if="loading"
-        class="absolute inset-0 z-50 bg-dark-900/40 backdrop-blur-sm flex items-center justify-center"
+        class="absolute inset-0 z-50 bg-dark-900/40 backdrop-blur-sm flex flex-col items-center justify-center sticky top-0 h-full"
       >
         <div
           class="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin"
         ></div>
       </div>
 
-      <div class="relative w-full h-full bg-white flex justify-center">
+      <div
+        class="relative bg-white flex justify-center mx-auto transition-all duration-300"
+        :style="{
+          minHeight: '100%',
+          height: `${iframeHeight}px`,
+          width: deviceType === 'mobile' ? '375px' : '100%',
+        }"
+      >
         <!-- The Website Iframe -->
         <iframe
           v-if="iframeUrl"
+          :key="iframeKey"
           :src="iframeUrl"
-          class="w-full h-full border-none pointer-events-none"
-          :style="{
-            width: deviceType === 'mobile' ? '375px' : '100%',
-            maxWidth: '100%',
-          }"
+          class="w-full h-full border-none pointer-events-none block"
+          scrolling="no"
         ></iframe>
 
         <!-- Heatmap Overlay -->
         <div
           v-if="showOverlay"
           class="absolute inset-0 overflow-hidden pointer-events-none"
-          :style="{
-            width: deviceType === 'mobile' ? '375px' : '100%',
-            left: deviceType === 'mobile' ? '50%' : '0',
-            transform: deviceType === 'mobile' ? 'translateX(-50%)' : 'none',
-          }"
         >
           <div
             v-for="(point, i) in points"
