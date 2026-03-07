@@ -75,7 +75,7 @@ async function loadRrweb(): Promise<any | null> {
     // Dynamically load rrweb via script tag to keep base tracker small
     return await new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      const apiUrl = (window as any).Jejak?.apiUrl || '';
+      const apiUrl = (window as any)._cfg?.apiUrl || '';
       script.src = `${apiUrl}/lib/telemetry.js`;
       script.onload = () => resolve((window as any).telemetry);
       script.onerror = () => reject(new Error('Failed to load telemetry'));

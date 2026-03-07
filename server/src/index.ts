@@ -72,11 +72,20 @@ app.get('/api/health', async (_req, res) => {
 // ── API Routes ───────────────────────────────────
 app.use('/api/auth', authRouter);
 app.use('/api/websites', websitesRouter);
-app.use('/api/event', collectRouter); // Stealth: rename from /collect
+app.use('/api/v1/ping', collectRouter); // Stealth endpoint
 app.use('/api/stats', statsRouter);
 app.use('/api/sessions', sessionsRouter);
 app.use('/api/heatmaps', heatmapsRouter);
 app.use('/api/funnels', funnelsRouter);
+
+// Stealth route for AB assignments to evade adblockers
+app.use((req, res, next) => {
+  if (req.method === 'POST' && req.path === '/api/v1/ab') {
+    req.url = '/api/ab-tests/assign';
+  }
+  next();
+});
+
 app.use('/api/ab-tests', abTestsRouter);
 app.use('/api/performance', performanceRouter);
 app.use('/api/errors', errorsRouter);

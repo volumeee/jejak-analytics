@@ -87,10 +87,23 @@ const collectSchema = z.object({
 // Rate limit: 200 requests/min for collection endpoint
 router.use(createRateLimiter(config.rateLimit.collect.windowMs, config.rateLimit.collect.max));
 
-// ── POST /api/event ──────────────────────────────
+// ── POST /api/... ──────────────────────────────
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const body = collectSchema.parse(req.body);
+    let rawBody = req.body;
+    
+    // Check if it's base64 encoded stealth payload
+    if (rawBody && typeof rawBody.d === 'string') {
+      try {
+        const decoded = Buffer.from(rawBody.d, 'base64').toString('utf-8');
+        rawBody = JSON.parse(decoded);
+      } catch (e) {
+        res.status(400).json({ error: 'Invalid payload encoding' });
+        return;
+      }
+    }
+
+    const body = collectSchema.parse(rawBody);
     const ua = parseUserAgent(req.headers['user-agent']);
     const geo = resolveGeoLocation(
       req.ip || '',

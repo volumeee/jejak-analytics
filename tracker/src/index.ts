@@ -6,8 +6,8 @@
  *
  * Usage (Script Tag):
  *   <script defer src="https://your-server/jejak.js"
- *           data-website-id="YOUR_ID"
- *           data-api="https://your-server"></script>
+ *           data-app-id="YOUR_ID"
+ *           data-host="https://your-server"></script>
  *
  * Usage (Module):
  *   import { init, track } from '@jejak/tracker'
@@ -57,7 +57,7 @@ function init(options: InitOptions): void {
     apiUrl,
     websiteId: options.websiteId
   };
-  (window as any).Jejak = { ...(window as any).Jejak, ...globalState };
+  (window as any)._cfg = { ...(window as any)._cfg, ...globalState };
 
   // Core: page view tracking (always on)
   initPageviewTracking();
@@ -77,13 +77,13 @@ function init(options: InitOptions): void {
   initABTracking();
 }
 
-/** Get API URL from the script tag's data-api attribute or same origin */
+/** Get API URL from the script tag's data-host attribute or same origin */
 function getScriptApiUrl(): string {
-  const scripts = document.querySelectorAll('script[data-website-id]');
+  const scripts = document.querySelectorAll('script[data-app-id]');
   const script = scripts[scripts.length - 1];
 
   if (script) {
-    const dataApi = script.getAttribute('data-api');
+    const dataApi = script.getAttribute('data-host');
     if (dataApi) return dataApi;
 
     // Default: use the script's origin
@@ -98,19 +98,19 @@ function getScriptApiUrl(): string {
 
 // ── Auto-init from script tag ────────────────────
 (function autoInit() {
-  const script = document.currentScript || document.querySelector('script[data-website-id]');
+  const script = document.currentScript || document.querySelector('script[data-app-id]');
 
   if (script) {
-    const websiteId = script.getAttribute('data-website-id');
+    const websiteId = script.getAttribute('data-app-id');
     if (websiteId) {
       init({
         websiteId,
-        apiUrl: script.getAttribute('data-api') || undefined,
-        heatmap: script.getAttribute('data-heatmap') !== 'false',
-        performance: script.getAttribute('data-performance') !== 'false',
-        errorTracking: script.getAttribute('data-errors') !== 'false',
-        sessionRecording: script.getAttribute('data-recording') === 'true',
-        sessionSampleRate: parseFloat(script.getAttribute('data-sample-rate') || '0.1'),
+        apiUrl: script.getAttribute('data-host') || undefined,
+        heatmap: script.getAttribute('data-h') !== 'false',
+        performance: script.getAttribute('data-p') !== 'false',
+        errorTracking: script.getAttribute('data-e') !== 'false',
+        sessionRecording: script.getAttribute('data-r') === 'true',
+        sessionSampleRate: parseFloat(script.getAttribute('data-sr') || '0.1'),
       });
     }
   }

@@ -45,14 +45,14 @@ const currentApiUrl = computed(() => {
 
 function getTrackerSnippet(websiteId: string): string {
   const apiUrl = currentApiUrl.value;
-  return `<script defer src="${apiUrl}/jejak.js"
-  data-website-id="${websiteId}"
-  data-api="${apiUrl}"
-  data-heatmap="true"
-  data-performance="true"
-  data-errors="true"
-  data-recording="true"
-  data-sample-rate="1"><\/script>`;
+  return `<script defer src="${apiUrl}/jejak.js?v=latest"
+  data-app-id="${websiteId}"
+  data-host="${apiUrl}"
+  data-h="true"
+  data-p="true"
+  data-e="true"
+  data-r="true"
+  data-sr="1"><\/script>`;
 }
 </script>
 
@@ -278,7 +278,7 @@ function getTrackerSnippet(websiteId: string): string {
                   Heatmaps 
                   <span class="text-[8px] bg-emerald-500/10 px-1 rounded text-emerald-300">Enhanced</span>
                 </div>
-                <div class="text-[10px] text-dark-400 font-mono">data-heatmap="true"</div>
+                <div class="text-[10px] text-dark-400 font-mono">data-h="true"</div>
               </div>
               <div class="p-3 rounded-xl bg-dark-800/40 border border-dark-700/50 group hover:border-emerald-500/30 transition-all">
                 <div class="text-[10px] font-bold text-emerald-400 uppercase mb-1 flex items-center gap-1.5">
@@ -289,11 +289,11 @@ function getTrackerSnippet(websiteId: string): string {
               </div>
               <div class="p-3 rounded-xl bg-dark-800/40 border border-dark-700/50">
                 <div class="text-[10px] font-bold text-emerald-400 uppercase mb-1">Performance</div>
-                <div class="text-[10px] text-dark-400 font-mono">data-performance="true"</div>
+                <div class="text-[10px] text-dark-400 font-mono">data-p="true"</div>
               </div>
               <div class="p-3 rounded-xl bg-dark-800/40 border border-dark-700/50">
                 <div class="text-[10px] font-bold text-amber-400 uppercase mb-1">Recording</div>
-                <div class="text-[10px] text-dark-400 font-mono">data-recording="true"</div>
+                <div class="text-[10px] text-dark-400 font-mono">data-r="true"</div>
               </div>
             </div>
           </div>

@@ -7,7 +7,7 @@ export default {
   output: {
     file: "dist/jejak.js",
     format: "iife",
-    name: "Jejak",
+    name: "_cfgLocal",
     exports: "named",
     sourcemap: false,
   },

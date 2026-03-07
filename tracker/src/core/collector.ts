@@ -59,7 +59,7 @@ function flush(): void {
   if (queue.length === 0) return;
 
   const batch = queue.splice(0, MAX_BATCH_SIZE);
-  const payload = JSON.stringify({
+  const payloadJson = JSON.stringify({
     websiteId,
     fingerprint,
     sessionId: sessionId || undefined,
@@ -70,11 +70,14 @@ function flush(): void {
     payload: batch,
   });
 
+  const b64 = typeof btoa !== 'undefined' ? btoa(unescape(encodeURIComponent(payloadJson))) : '';
+  const payload = JSON.stringify({ d: b64 });
+
   // Use sendBeacon only on page unload (can't get response but reliable)
   // Use fetch for normal flushes (to get sessionId back)
   if (isUnloading && navigator.sendBeacon) {
     const blob = new Blob([payload], { type: 'application/json' });
-    navigator.sendBeacon(`${apiUrl}/api/event`, blob);
+    navigator.sendBeacon(`${apiUrl}/api/v1/ping`, blob);
   } else {
     fetchSend(payload);
   }
@@ -105,7 +108,7 @@ export async function waitForSessionId(): Promise<string> {
 }
 
 function fetchSend(payload: string): void {
-  fetch(`${apiUrl}/api/event`, {
+  fetch(`${apiUrl}/api/v1/ping`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: payload,

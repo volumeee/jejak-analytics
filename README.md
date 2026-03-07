@@ -39,8 +39,8 @@ Add this tag to your website's `<head>`:
 <script
   defer
   src="http://your-server:3100/jejak.js"
-  data-website-id="YOUR_WEBSITE_ID"
-  data-api="http://your-server:3100"
+  data-app-id="YOUR_WEBSITE_ID"
+  data-host="http://your-server:3100"
 ></script>
 ```
 
@@ -57,7 +57,7 @@ Add this tag to your website's `<head>`:
 #### 2. Programmatic (JavaScript)
 
 ```javascript
-Jejak.track("purchase", { amount: 150.0, currency: "USD" });
+_cfgLocal.track("purchase", { amount: 150.0, currency: "USD" });
 ```
 
 ### A/B Testing
@@ -69,15 +69,15 @@ Jejak.track("purchase", { amount: 150.0, currency: "USD" });
 
 ### Tracker Configuration
 
-| Attribute          | Default       | Description                      |
-| ------------------ | ------------- | -------------------------------- |
-| `data-website-id`  | **required**  | Your website UUID from Settings  |
-| `data-api`         | script origin | Analytics server URL             |
-| `data-heatmap`     | `true`        | Enable click/scroll heatmaps     |
-| `data-performance` | `true`        | Track Core Web Vitals            |
-| `data-errors`      | `true`        | Track JavaScript errors          |
-| `data-recording`   | `false`       | Enable session recording (rrweb) |
-| `data-sample-rate` | `0.1`         | Recording sample rate (0-1)      |
+| Attribute     | Default       | Description                     |
+| ------------- | ------------- | ------------------------------- |
+| `data-app-id` | **required**  | Your website UUID from Settings |
+| `data-host`   | script origin | Analytics server URL            |
+| `data-h`      | `true`        | Enable click/scroll heatmaps    |
+| `data-p`      | `true`        | Track Core Web Vitals           |
+| `data-e`      | `true`        | Track JavaScript errors         |
+| `data-r`      | `false`       | Enable session recording        |
+| `data-sr`     | `0.1`         | Recording sample rate (0-1)     |
 
 ## Documentation
 
@@ -93,7 +93,7 @@ Full documentation with Indonesian translation is available inside the **Dashboa
 
 | Method | Endpoint                   | Auth | Description               |
 | ------ | -------------------------- | ---- | ------------------------- |
-| POST   | `/api/event`               | No   | Data collection (tracker) |
+| POST   | `/api/v1/ping`             | No   | Data collection (tracker) |
 | POST   | `/api/auth/login`          | No   | Dashboard login           |
 | GET    | `/api/stats/overview`      | JWT  | KPI overview              |
 | GET    | `/api/stats/timeseries`    | JWT  | Traffic chart data        |

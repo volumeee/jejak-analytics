@@ -38,11 +38,11 @@ Add this script tag before `</body>` in your HTML:
 <script
   defer
   src="http://localhost:3100/jejak.js"
-  data-website-id="YOUR_WEBSITE_ID"
-  data-api="http://localhost:3100"
-  data-heatmap="true"
-  data-performance="true"
-  data-errors="true"
+  data-app-id="YOUR_WEBSITE_ID"
+  data-host="http://localhost:3100"
+  data-h="true"
+  data-p="true"
+  data-e="true"
 ></script>
 ```
 
@@ -50,15 +50,15 @@ Add this script tag before `</body>` in your HTML:
 
 ## Tracker Configuration
 
-| Attribute          | Default       | Description                      |
-| ------------------ | ------------- | -------------------------------- |
-| `data-website-id`  | **required**  | Your website UUID from Settings  |
-| `data-api`         | script origin | Analytics server URL             |
-| `data-heatmap`     | `true`        | Enable click/scroll heatmaps     |
-| `data-performance` | `true`        | Track Core Web Vitals            |
-| `data-errors`      | `true`        | Track JavaScript errors          |
-| `data-recording`   | `false`       | Enable session recording (rrweb) |
-| `data-sample-rate` | `0.1`         | Recording sample rate (0-1)      |
+| Attribute     | Default       | Description                     |
+| ------------- | ------------- | ------------------------------- |
+| `data-app-id` | **required**  | Your website UUID from Settings |
+| `data-host`   | script origin | Analytics server URL            |
+| `data-h`      | `true`        | Enable click/scroll heatmaps    |
+| `data-p`      | `true`        | Track Core Web Vitals           |
+| `data-e`      | `true`        | Track JavaScript errors         |
+| `data-r`      | `false`       | Enable session recording        |
+| `data-sr`     | `0.1`         | Recording sample rate (0-1)     |
 
 ## Custom Event Tracking
 
@@ -66,8 +66,8 @@ Add this script tag before `</body>` in your HTML:
 
 ```javascript
 // After tracker loads
-Jejak.track("button_click", { label: "Download", page: "/home" });
-Jejak.track("upgrade", { amount: 50000, product: "Premium Plan" });
+_cfgLocal.track("button_click", { label: "Download", page: "/home" });
+_cfgLocal.track("upgrade", { amount: 50000, product: "Premium Plan" });
 ```
 
 ### Declarative (HTML Attributes)
@@ -88,7 +88,7 @@ Create experiments in the **Dashboard > AB Experiments** tab, then use these att
 Or programmatically:
 
 ```javascript
-const variant = await Jejak.getVariant("TEST_ID");
+const variant = await _cfgLocal.getVariant("TEST_ID");
 if (variant === "A") {
   // Show variant A
 } else {
@@ -100,7 +100,7 @@ if (variant === "A") {
 
 | Method | Endpoint                   | Auth | Description               |
 | ------ | -------------------------- | ---- | ------------------------- |
-| POST   | `/api/event`               | No   | Data collection (tracker) |
+| POST   | `/api/v1/ping`             | No   | Data collection (tracker) |
 | POST   | `/api/auth/login`          | No   | Dashboard login           |
 | GET    | `/api/stats/overview`      | JWT  | KPI overview              |
 | GET    | `/api/stats/timeseries`    | JWT  | Traffic chart data        |

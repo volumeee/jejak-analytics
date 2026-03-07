@@ -115,7 +115,7 @@ router.post('/assign', async (req: Request, res: Response) => {
     "SELECT variants FROM ab_tests WHERE id = $1 AND status = 'running'",
     [testId],
   );
-  if (testResult.rows.length === 0) { res.status(404).json({ error: 'Test not found or not running' }); return; }
+  if (testResult.rows.length === 0) { res.status(200).json({ variant: null, error: 'Test not found or not running' }); return; }
 
   const variants = typeof testResult.rows[0].variants === 'string'
     ? JSON.parse(testResult.rows[0].variants) : testResult.rows[0].variants;
