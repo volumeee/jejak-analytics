@@ -33,11 +33,15 @@ services:
 
   # ── Analytics Server ────────────────────────────
   server:
-    image: ghcr.io/bagose/jejak-server:latest
+    build:
+      context: ./server
+      dockerfile: Dockerfile
     container_name: jejak-server
     restart: unless-stopped
     ports:
       - "${PORT:-3100}:3100"
+    volumes:
+      - ./tracker/dist:/app/public:ro
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-jejak}:${POSTGRES_PASSWORD:-jejak_secret}@postgres:5432/${POSTGRES_DB:-jejak_analytics}
       REDIS_URL: redis://redis:6379
@@ -55,7 +59,9 @@ services:
 
   # ── Dashboard ───────────────────────────────────
   dashboard:
-    image: ghcr.io/bagose/jejak-dashboard:latest
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
     container_name: jejak-dashboard
     restart: unless-stopped
     ports:

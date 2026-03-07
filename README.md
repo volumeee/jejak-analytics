@@ -12,24 +12,39 @@ Premium, lightweight, privacy-first, and self-hosted web analytics.
 - **🛡️ Privacy First**: Self-hosted, no cookies required by default, and fully compliant with data standards.
 - **🔌 Plug & Play**: Simple script integration with declarative event tracking.
 
-## Quick Start (Deployment)
+## Quick Start
 
-1. **Clone & Setup**:
+### 🚀 1. Production / End Users (Simplest Setup)
+
+Jejak is distributed as lightweight, pre-built Docker images. You don't need to build from source! Just run this 1-liner in your terminal:
+
+```bash
+curl -O https://raw.githubusercontent.com/bagose/jejak-analytics/main/docker-compose.yml && docker compose up -d
+```
+
+> **Note:** This automatically downloads the config, pulls the lightweight `jejak-server` and `jejak-dashboard` images, and sets up PostgreSQL & Redis in the background.
+
+- **Dashboard:** `http://localhost:3101`
+- **Default Login:** `admin` / `admin123`
+
+---
+
+### 💻 2. Local Development (For Developers)
+
+If you want to modify the source code or build the images yourself:
+
+1. **Clone the repository:**
 
    ```bash
-   git clone <repo-url>
-   cd jejak
+   git clone https://github.com/bagose/jejak-analytics.git
+   cd jejak-analytics
    ```
 
-2. **Configure Environment**:
-   Copy `.env.example` to `.env` and fill in your database credentials and secret keys.
-
-3. **Docker Deployment (Recommended)**:
+2. **Run using the Development Docker Compose:**
    ```bash
-   docker compose up -d
+   docker compose -f docker-compose.dev.yml up -d --build
    ```
-   Dashboard will be available at `http://localhost:3101`.
-   API & Collector will be available at `http://localhost:3100`.
+   > This builds the Dashboard, Server, and Tracker scripts directly from your local source code.
 
 ## Tracker Integration
 
