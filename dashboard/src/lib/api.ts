@@ -9,7 +9,7 @@ export const api = axios.create({
 
 // Inject JWT token
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('pa_token');
+  const token = localStorage.getItem('jj_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -21,7 +21,7 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('pa_token');
+      localStorage.removeItem('jj_token');
       window.location.hash = '#/login';
     }
     return Promise.reject(err);

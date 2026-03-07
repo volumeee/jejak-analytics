@@ -30,7 +30,7 @@ export const router = createRouter({
 
 // Auth guard
 router.beforeEach((to) => {
-  const token = localStorage.getItem('pa_token');
+  const token = localStorage.getItem('jj_token') || localStorage.getItem('pa_token');
   if (!token && to.name !== 'Login' && to.name !== 'Shared') return { name: 'Login' };
   if (token && to.name === 'Login') return { name: 'Dashboard' };
 });

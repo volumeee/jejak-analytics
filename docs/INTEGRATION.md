@@ -67,7 +67,7 @@ Add this script tag before `</body>` in your HTML:
 ```javascript
 // After tracker loads
 Jejak.track("button_click", { label: "Download", page: "/home" });
-Jejak.track("purchase", { amount: 50000, product: "Premium Plan" });
+Jejak.track("upgrade", { amount: 50000, product: "Premium Plan" });
 ```
 
 ### Declarative (HTML Attributes)

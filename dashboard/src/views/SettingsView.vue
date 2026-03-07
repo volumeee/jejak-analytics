@@ -31,8 +31,16 @@ async function addWebsite() {
 }
 
 const currentApiUrl = computed(() => {
-  // Try to determine API URL from current location or env
-  return import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:3100`;
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  
+  // Smart fallback for dev
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return `${window.location.protocol}//${window.location.hostname}:3100`;
+  }
+  
+  // Production fallback: assume API is on the same origin if not specified via ENV
+  // This is better for open source as it doesn't leak private domains
+  return window.location.origin;
 });
 
 function getTrackerSnippet(websiteId: string): string {
@@ -214,7 +222,7 @@ function getTrackerSnippet(websiteId: string): string {
                 </p>
                 <div class="bg-dark-950/80 rounded-xl p-4 font-mono text-[11px] text-amber-400 border border-dark-800">
                   <code>
-                    Jejak.track('purchase', {<br>
+                    Jejak.track('upgrade', {<br>
                     &nbsp;&nbsp;amount: 25.99,<br>
                     &nbsp;&nbsp;currency: 'USD'<br>
                     });

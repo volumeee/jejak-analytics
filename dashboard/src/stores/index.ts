@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import { api } from '../lib/api.js';
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref(localStorage.getItem('pa_token') || '');
+  const token = ref(localStorage.getItem('jj_token') || '');
   const user = ref<any>(null);
 
   const isAuthenticated = computed(() => !!token.value);
@@ -12,13 +12,13 @@ export const useAuthStore = defineStore('auth', () => {
     const res = await api.post('/auth/login', { username, password });
     token.value = res.data.token;
     user.value = res.data.user;
-    localStorage.setItem('pa_token', res.data.token);
+    localStorage.setItem('jj_token', res.data.token);
   }
 
   function logout() {
     token.value = '';
     user.value = null;
-    localStorage.removeItem('pa_token');
+    localStorage.removeItem('jj_token');
   }
 
   return { token, user, isAuthenticated, login, logout };
