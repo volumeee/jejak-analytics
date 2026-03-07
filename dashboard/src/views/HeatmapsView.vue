@@ -55,23 +55,28 @@ const iframeUrl = ref("");
 const iframeInputUrl = ref("");
 watch(selectedPage, (newPath) => {
   if (!newPath) return;
-  if (ws.current?.domain) {
+
+  // Find the selected page data to extract its actual recorded URL
+  const matchedPage = pages.value.find((p) => p.path === newPath);
+
+  if (matchedPage && matchedPage.url) {
+    // We already recorded the exact URL (including possible hashes), so use it directly!
+    iframeUrl.value = matchedPage.url;
+  } else if (ws.current?.domain) {
+    // Fallback if URL is missing (e.g. older records)
     let base = ws.current.domain.startsWith("http")
       ? ws.current.domain
       : `https://${ws.current.domain}`;
 
-    // Remove trailing slash from base if present to prevent double slashes
     if (base.endsWith("/")) {
       base = base.slice(0, -1);
     }
 
-    // append path. newPath usually starts with '/' from the database
     const path = newPath.startsWith("/") ? newPath : `/${newPath}`;
-
-    // Use standard routing (no hash) since most modern apps use History mode
     iframeUrl.value = `${base}${path}`;
-    iframeInputUrl.value = iframeUrl.value;
   }
+
+  iframeInputUrl.value = iframeUrl.value;
 });
 
 function applyCustomUrl() {

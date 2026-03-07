@@ -60,10 +60,10 @@ router.get('/pages', authMiddleware, async (req: Request, res: Response) => {
 
   // Merge page_views paths + heatmap_data paths for richer dropdown
   const result = await query(`
-    SELECT path, SUM(clicks) AS clicks, SUM(views) AS views
+    SELECT path, MAX(url) AS url, SUM(clicks) AS clicks, SUM(views) AS views
     FROM (
       -- Pages from heatmap click data
-      SELECT path, COUNT(*) AS clicks, 0 AS views
+      SELECT path, MAX(url) AS url, COUNT(*) AS clicks, 0 AS views
       FROM heatmap_data
       WHERE website_id = $1
         AND event_type = 'click'
@@ -75,7 +75,7 @@ router.get('/pages', authMiddleware, async (req: Request, res: Response) => {
       UNION ALL
 
       -- Pages from page_views (ensures all pages appear even without click events)
-      SELECT path, 0 AS clicks, COUNT(*) AS views
+      SELECT path, MAX(url) AS url, 0 AS clicks, COUNT(*) AS views
       FROM page_views
       WHERE website_id = $1
         AND entered_at >= $2::date
