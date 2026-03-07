@@ -76,8 +76,6 @@ Jejak.track("upgrade", { amount: 50000, product: "Premium Plan" });
 <button data-jj-event="download_click" data-jj-version="v2.0">Download</button>
 ```
 
-> **Note**: For backward compatibility, `data-pa-*` attributes are still supported but `data-jj-*` is recommended for new implementations.
-
 ## A/B Testing
 
 Create experiments in the **Dashboard > AB Experiments** tab, then use these attributes:

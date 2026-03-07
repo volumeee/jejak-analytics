@@ -33,7 +33,7 @@ export function generateFingerprint(): string {
 }
 
 function getSessionSeed(): string {
-  const key = '__pa_s';
+  const key = '__jj_s';
   let seed = sessionStorage.getItem(key);
   if (!seed) {
     seed = Math.random().toString(36).substring(2, 10);

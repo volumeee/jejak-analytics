@@ -76,9 +76,9 @@ async function loadRrweb(): Promise<any | null> {
     return await new Promise((resolve, reject) => {
       const script = document.createElement('script');
       const apiUrl = (window as any).Jejak?.apiUrl || '';
-      script.src = `${apiUrl}/lib/rrweb.js`;
-      script.onload = () => resolve((window as any).rrweb);
-      script.onerror = () => reject(new Error('Failed to load rrweb'));
+      script.src = `${apiUrl}/lib/telemetry.js`;
+      script.onload = () => resolve((window as any).telemetry);
+      script.onerror = () => reject(new Error('Failed to load telemetry'));
       document.head.appendChild(script);
     });
   } catch {

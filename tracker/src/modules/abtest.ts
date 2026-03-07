@@ -42,7 +42,7 @@ export async function getVariant(testId: string): Promise<string | null> {
 }
 
 /**
- * Automatically handle data-jj-ab-test / data-pa-ab-test attributes on elements.
+ * Automatically handle data-jj-ab-test attributes on elements.
  */
 export async function initABTracking(): Promise<void> {
   // Initial run

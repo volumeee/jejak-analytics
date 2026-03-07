@@ -49,6 +49,12 @@ app.use(cors({
 }));
 app.use(compression());
 app.use(express.json({ limit: '5mb' }));
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api') || req.path === '/jejak.js') {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  }
+  next();
+});
 
 // Trust proxy for accurate IP detection
 app.set('trust proxy', true);
@@ -106,7 +112,6 @@ const serveTracker = (req: express.Request, res: express.Response) => {
 };
 
 app.get('/jejak.js', serveTracker);
-app.get('/tracker.js', serveTracker); // Legacy support
 
 // ── Error handler ────────────────────────────────
 app.use(errorMiddleware);

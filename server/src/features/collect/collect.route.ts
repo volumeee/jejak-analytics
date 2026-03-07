@@ -296,7 +296,7 @@ async function trackABConversion(client: any, sessionId: string, goal: string, i
     
     const result = await client.query(
       `UPDATE ab_test_assignments
-       SET converted = TRUE, created_at = created_at
+       SET converted = TRUE, created_at = ab_test_assignments.created_at
        FROM ab_tests
        WHERE ab_test_assignments.test_id = ab_tests.id
          AND ab_test_assignments.session_id = $1
