@@ -485,10 +485,31 @@ function pageBarWidth(views: string): string {
               </div>
             </div>
             <div
-              v-if="!topPages.length"
-              class="text-center py-6 text-dark-500 text-sm"
+              v-if="!topPages.length && !loading"
+              class="text-center py-10 flex flex-col items-center justify-center animate-fade-in"
             >
-              No page data yet
+              <div
+                class="w-12 h-12 bg-dark-800/50 rounded-full flex items-center justify-center mb-3 text-dark-500"
+              >
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <p
+                class="text-[11px] uppercase tracking-widest font-bold text-dark-500"
+              >
+                No page data yet
+              </p>
             </div>
           </div>
         </div>
@@ -554,10 +575,31 @@ function pageBarWidth(views: string): string {
               </div>
             </div>
             <div
-              v-if="!topSources.length"
-              class="text-center py-6 text-dark-500 text-sm"
+              v-if="!topSources.length && !loading"
+              class="text-center py-10 flex flex-col items-center justify-center animate-fade-in"
             >
-              No source data yet
+              <div
+                class="w-12 h-12 bg-dark-800/50 rounded-full flex items-center justify-center mb-3 text-dark-500"
+              >
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                  />
+                </svg>
+              </div>
+              <p
+                class="text-[11px] uppercase tracking-widest font-bold text-dark-500"
+              >
+                No source data yet
+              </p>
             </div>
           </div>
         </div>

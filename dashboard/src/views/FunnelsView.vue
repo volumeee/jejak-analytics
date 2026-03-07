@@ -181,7 +181,12 @@ onMounted(fetchFunnels);
     <div
       class="bg-dark-900/60 backdrop-blur-sm border border-dark-800/50 rounded-2xl p-6"
     >
-      <div v-if="analysis.length" class="space-y-4">
+      <div v-if="loading" class="py-20 flex items-center justify-center">
+        <div
+          class="w-10 h-10 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin"
+        ></div>
+      </div>
+      <div v-else-if="analysis.length" class="space-y-4">
         <div v-for="(step, i) in analysis" :key="i" class="relative">
           <div class="flex items-center gap-4">
             <div
@@ -227,10 +232,21 @@ onMounted(fetchFunnels);
           ></div>
         </div>
       </div>
-      <div v-else class="text-center py-12 text-dark-500">
-        <p class="text-lg mb-2">📈 No funnels configured</p>
-        <p class="text-sm">
-          Create a funnel via the API to start tracking conversion flows
+      <div
+        v-else
+        class="text-center py-24 flex flex-col items-center justify-center animate-fade-in"
+      >
+        <div
+          class="w-20 h-20 bg-dark-800/50 rounded-full flex items-center justify-center mb-6 text-dark-500 text-4xl"
+        >
+          📈
+        </div>
+        <p class="text-dark-300 font-medium tracking-wide">
+          No funnels configured
+        </p>
+        <p class="text-xs text-dark-500 mt-2 max-w-sm">
+          Click the "Build Funnel" button above to start tracking multi-step
+          conversion flows and find out where users drop off.
         </p>
       </div>
     </div>

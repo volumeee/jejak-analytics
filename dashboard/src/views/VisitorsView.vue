@@ -95,9 +95,13 @@ function getChartData() {
       <div
         class="bg-dark-900/60 backdrop-blur-sm border border-dark-800/50 rounded-2xl p-6 flex items-center justify-center"
       >
-        <div class="w-64 h-64">
+        <div class="w-64 h-64 relative flex items-center justify-center">
+          <div
+            v-if="loading"
+            class="absolute inset-0 rounded-full border-[30px] border-dark-800/30 animate-pulse"
+          ></div>
           <Doughnut
-            v-if="data.length"
+            v-else-if="data.length"
             :data="getChartData()"
             :options="{
               plugins: {
@@ -107,12 +111,32 @@ function getChartData() {
                 },
               },
               cutout: '65%',
+              animation: { duration: 500 },
             }"
           />
           <div
             v-else
-            class="flex items-center justify-center h-full text-dark-500 text-sm"
+            class="flex flex-col items-center justify-center h-full text-dark-500 text-sm animate-fade-in"
           >
+            <svg
+              class="w-8 h-8 mb-2 opacity-30"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
+              />
+            </svg>
             No data
           </div>
         </div>
@@ -131,11 +155,28 @@ function getChartData() {
               <th class="text-right py-3">Visitors</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody v-if="loading">
+            <tr
+              v-for="i in 5"
+              :key="`skeleton-${i}`"
+              class="animate-pulse border-b border-dark-800/30"
+            >
+              <td class="py-3.5">
+                <div class="h-4 bg-dark-800/40 rounded w-1/2"></div>
+              </td>
+              <td class="py-3.5">
+                <div class="h-4 bg-dark-800/40 rounded w-1/3 ml-auto"></div>
+              </td>
+              <td class="py-3.5">
+                <div class="h-4 bg-dark-800/40 rounded w-1/3 ml-auto"></div>
+              </td>
+            </tr>
+          </tbody>
+          <tbody v-else>
             <tr
               v-for="(item, i) in data"
               :key="item.value"
-              class="border-b border-dark-800/30"
+              class="border-b border-dark-800/30 hover:bg-dark-800/10 transition-colors"
             >
               <td class="py-2.5 text-dark-200 flex items-center gap-2">
                 <span

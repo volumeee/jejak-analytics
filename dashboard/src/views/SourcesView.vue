@@ -76,7 +76,27 @@ onMounted(fetchData);
             <th class="text-right py-3 pl-4">Bounce Rate</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody v-if="loading">
+          <tr
+            v-for="i in 5"
+            :key="`skeleton-${i}`"
+            class="animate-pulse border-b border-dark-800/20"
+          >
+            <td class="py-4 pr-4">
+              <div class="h-4 bg-dark-800/40 rounded w-1/2"></div>
+            </td>
+            <td class="py-4 px-4">
+              <div class="h-4 bg-dark-800/40 rounded w-1/3 ml-auto"></div>
+            </td>
+            <td class="py-4 px-4">
+              <div class="h-4 bg-dark-800/40 rounded w-1/3 ml-auto"></div>
+            </td>
+            <td class="py-4 pl-4">
+              <div class="h-4 bg-dark-800/40 rounded w-1/4 ml-auto"></div>
+            </td>
+          </tr>
+        </tbody>
+        <tbody v-else-if="sources.length > 0">
           <tr
             v-for="s in sources"
             :key="s.source"
@@ -106,9 +126,29 @@ onMounted(fetchData);
       </table>
       <div
         v-if="!sources.length && !loading"
-        class="text-center py-10 text-dark-500"
+        class="text-center py-16 flex flex-col items-center justify-center animate-fade-in"
       >
-        No source data yet
+        <div
+          class="w-16 h-16 bg-dark-800/50 rounded-full flex items-center justify-center mb-4 text-dark-500"
+        >
+          <svg
+            class="w-8 h-8"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+            />
+          </svg>
+        </div>
+        <p class="text-dark-300 font-medium tracking-wide">No sources found</p>
+        <p class="text-xs text-dark-500 mt-1 max-w-xs">
+          There is no traffic source data available for the selected period.
+        </p>
       </div>
     </div>
   </div>

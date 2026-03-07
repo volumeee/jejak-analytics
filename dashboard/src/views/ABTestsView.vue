@@ -137,9 +137,16 @@ onMounted(fetchTests);
 
             <div
               v-if="!tests.length && !loading"
-              class="text-center py-10 text-dark-600 text-sm"
+              class="text-center py-12 flex flex-col items-center justify-center animate-fade-in"
             >
-              No experiments found
+              <div
+                class="w-12 h-12 bg-dark-800/50 rounded-full flex items-center justify-center mb-3 text-dark-500"
+              >
+                <span class="text-xl">🧪</span>
+              </div>
+              <p class="text-xs font-medium text-dark-400">
+                No experiments yet
+              </p>
             </div>
           </div>
         </div>

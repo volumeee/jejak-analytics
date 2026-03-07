@@ -138,15 +138,41 @@ function getVitalStatus(
             <th class="text-right py-3">Samples</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody v-if="loading">
+          <tr
+            v-for="i in 5"
+            :key="`skeleton-${i}`"
+            class="animate-pulse border-b border-dark-800/30"
+          >
+            <td class="py-3.5 pl-3">
+              <div class="h-4 bg-dark-800/40 rounded w-3/4"></div>
+            </td>
+            <td class="py-3.5 px-3">
+              <div class="h-4 bg-dark-800/40 rounded w-16 ml-auto"></div>
+            </td>
+            <td class="py-3.5 px-3">
+              <div class="h-4 bg-dark-800/40 rounded w-16 ml-auto"></div>
+            </td>
+            <td class="py-3.5 px-3">
+              <div class="h-4 bg-dark-800/40 rounded w-12 ml-auto"></div>
+            </td>
+            <td class="py-3.5 px-3">
+              <div class="h-4 bg-dark-800/40 rounded w-16 ml-auto"></div>
+            </td>
+            <td class="py-3.5 pr-3">
+              <div class="h-4 bg-dark-800/40 rounded w-12 ml-auto"></div>
+            </td>
+          </tr>
+        </tbody>
+        <tbody v-else-if="pages.length > 0">
           <tr
             v-for="p in pages"
             :key="p.path"
-            class="border-b border-dark-800/30"
+            class="border-b border-dark-800/30 hover:bg-dark-800/20 transition-colors"
           >
             <td class="py-2.5 text-dark-300 truncate max-w-xs">{{ p.path }}</td>
             <td
-              class="py-2.5 text-right"
+              class="py-2.5 text-right font-medium"
               :class="
                 getVitalStatus('lcp', parseInt(p.avg_lcp || '0')).class.split(
                   ' ',
@@ -156,7 +182,7 @@ function getVitalStatus(
               {{ p.avg_lcp || "-" }}ms
             </td>
             <td
-              class="py-2.5 text-right"
+              class="py-2.5 text-right font-medium"
               :class="
                 getVitalStatus('fcp', parseInt(p.avg_fcp || '0')).class.split(
                   ' ',
@@ -166,7 +192,7 @@ function getVitalStatus(
               {{ p.avg_fcp || "-" }}ms
             </td>
             <td
-              class="py-2.5 text-right"
+              class="py-2.5 text-right font-medium"
               :class="
                 getVitalStatus('cls', parseFloat(p.avg_cls || '0')).class.split(
                   ' ',
@@ -176,7 +202,7 @@ function getVitalStatus(
               {{ p.avg_cls || "-" }}
             </td>
             <td
-              class="py-2.5 text-right"
+              class="py-2.5 text-right font-medium"
               :class="
                 getVitalStatus('ttfb', parseInt(p.avg_ttfb || '0')).class.split(
                   ' ',
@@ -191,12 +217,39 @@ function getVitalStatus(
           </tr>
         </tbody>
       </table>
-      <div v-if="!pages.length" class="text-center py-8 text-dark-500">
-        No performance data yet
+      <div
+        v-if="!pages.length && !loading"
+        class="text-center py-16 flex flex-col items-center justify-center animate-fade-in"
+      >
+        <div
+          class="w-16 h-16 bg-dark-800/50 rounded-full flex items-center justify-center mb-4 text-dark-500 text-2xl"
+        >
+          ⚡
+        </div>
+        <p class="text-dark-300 font-medium tracking-wide">
+          No performance data found
+        </p>
+        <p class="text-xs text-dark-500 mt-1 max-w-xs">
+          Waiting for visitors to record page speeds.
+        </p>
       </div>
     </div>
   </div>
-  <div v-else-if="!loading" class="text-center py-20 text-dark-500">
-    ⚡ No performance data for this period
+  <div
+    v-else-if="!loading"
+    class="text-center py-20 flex flex-col items-center justify-center animate-fade-in"
+  >
+    <div
+      class="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-4 text-blue-400 text-2xl"
+    >
+      ⚡
+    </div>
+    <p class="text-dark-300 font-medium tracking-wide">
+      Initializing Performance Vitals
+    </p>
+    <p class="text-xs text-dark-500 mt-1 max-w-sm">
+      Jejak is waiting to record TTFB, FCP, LCP, and CLS for your website.
+      Please ensure your visitors are passing through.
+    </p>
   </div>
 </template>
