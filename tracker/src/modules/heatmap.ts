@@ -31,8 +31,10 @@ export function initHeatmapTracking(): void {
 
   // Track clicks
   document.addEventListener('click', (e) => {
-    const x = e.pageX / document.documentElement.scrollWidth;
-    const y = e.pageY / document.documentElement.scrollHeight;
+    // Robust coordinate system: Y is absolute from top, X is relative to screen center.
+    // This allows SQL grouping to work regardless of the user's monitor width.
+    const xPos = Math.round(e.pageX - (window.innerWidth / 2));
+    const yPos = Math.round(e.pageY);
 
     // Generate a simple CSS selector for the clicked element
     const selector = getSelector(e.target as HTMLElement);
@@ -42,8 +44,8 @@ export function initHeatmapTracking(): void {
       url: location.href,
       path: getHeatmapPath(),
       eventType: 'click',
-      x: Math.round(x * 10000) / 10000,
-      y: Math.round(y * 10000) / 10000,
+      x: xPos,
+      y: Math.max(2, yPos), // Ensure Y > 1.5 so Dashboard knows it's the new pixel format
       viewportWidth: window.innerWidth,
       viewportHeight: window.innerHeight,
       elementSelector: selector,
@@ -68,7 +70,7 @@ export function initHeatmapTracking(): void {
         path: getHeatmapPath(),
         eventType: 'scroll',
         x: 0,
-        y: Math.round(scrollPercent * 10000) / 10000,
+        y: Math.max(2, Math.round(maxScrollY)), // Mark as new format
         viewportWidth: window.innerWidth,
         viewportHeight: window.innerHeight,
       });

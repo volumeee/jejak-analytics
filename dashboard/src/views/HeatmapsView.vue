@@ -224,8 +224,11 @@ onMounted(() => {
             :key="i"
             class="absolute rounded-full"
             :style="{
-              left: `${point.x * 100}%`,
-              top: `${point.y * 100}%`,
+              left:
+                point.y <= 1.5
+                  ? `${point.x * 100}%`
+                  : `calc(50% + ${point.x}px)`,
+              top: point.y <= 1.5 ? `${point.y * 100}%` : `${point.y}px`,
               width: `${Math.min(10 + point.value * 2, 40)}px`,
               height: `${Math.min(10 + point.value * 2, 40)}px`,
               background: `radial-gradient(circle, rgba(239,68,68,${Math.min(0.2 + point.value * 0.05, 0.7)}) 0%, transparent 80%)`,
