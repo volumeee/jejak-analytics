@@ -128,4 +128,12 @@ Full documentation with Indonesian translation is available inside the **Dashboa
 
 ---
 
-© 2026 Jejak Team. Built for speed and privacy.
+## 📄 License
+
+MIT License — see [LICENSE](LICENSE) for details.
+
+---
+
+<p align="center">
+  <strong>Built with ❤️ by <a href="https://github.com/volumeee">volumeee</a></strong>
+</p>
