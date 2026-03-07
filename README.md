@@ -51,12 +51,19 @@ If you want to modify the source code or build the images yourself:
 Add this tag to your website's `<head>`:
 
 ```html
-<script
-  defer
-  src="http://your-server:3100/jejak.js"
-  data-app-id="YOUR_WEBSITE_ID"
-  data-host="http://your-server:3100"
-></script>
+<script defer type="text/javascript">
+  const script = document.createElement("script");
+  script.defer = true;
+  script.src = "http://your-server:3100/jejak.js?v=" + new Date().getTime();
+  script.setAttribute("data-app-id", "YOUR_WEBSITE_ID");
+  script.setAttribute("data-host", "http://your-server:3100");
+  script.setAttribute("data-h", "true");
+  script.setAttribute("data-p", "true");
+  script.setAttribute("data-e", "true");
+  script.setAttribute("data-r", "true");
+  script.setAttribute("data-sr", "1");
+  document.head.appendChild(script);
+</script>
 ```
 
 ### Event Tracking

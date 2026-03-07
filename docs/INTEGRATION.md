@@ -35,15 +35,19 @@ npm run dev
 Add this script tag before `</body>` in your HTML:
 
 ```html
-<script
-  defer
-  src="http://localhost:3100/jejak.js"
-  data-app-id="YOUR_WEBSITE_ID"
-  data-host="http://localhost:3100"
-  data-h="true"
-  data-p="true"
-  data-e="true"
-></script>
+<script defer type="text/javascript">
+  const script = document.createElement("script");
+  script.defer = true;
+  script.src = "http://localhost:3100/jejak.js?v=" + new Date().getTime();
+  script.setAttribute("data-app-id", "YOUR_WEBSITE_ID");
+  script.setAttribute("data-host", "http://localhost:3100");
+  script.setAttribute("data-h", "true");
+  script.setAttribute("data-p", "true");
+  script.setAttribute("data-e", "true");
+  script.setAttribute("data-r", "true");
+  script.setAttribute("data-sr", "1");
+  document.head.appendChild(script);
+</script>
 ```
 
 ---

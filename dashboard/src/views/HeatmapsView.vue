@@ -203,6 +203,7 @@ onMounted(() => {
           minHeight: '100%',
           height: `${iframeHeight}px`,
           width: deviceType === 'mobile' ? '375px' : '100%',
+          minWidth: deviceType === 'desktop' ? '1024px' : '0',
         }"
       >
         <!-- The Website Iframe -->

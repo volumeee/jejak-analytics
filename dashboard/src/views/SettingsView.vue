@@ -45,14 +45,19 @@ const currentApiUrl = computed(() => {
 
 function getTrackerSnippet(websiteId: string): string {
   const apiUrl = currentApiUrl.value;
-  return `<script defer src="${apiUrl}/jejak.js?v=latest"
-  data-app-id="${websiteId}"
-  data-host="${apiUrl}"
-  data-h="true"
-  data-p="true"
-  data-e="true"
-  data-r="true"
-  data-sr="1"><\/script>`;
+  return `<script defer type="text/javascript">
+  const script = document.createElement('script');
+  script.defer = true;
+  script.src = '${apiUrl}/jejak.js?v=' + new Date().getTime();
+  script.setAttribute('data-app-id', '${websiteId}');
+  script.setAttribute('data-host', '${apiUrl}');
+  script.setAttribute('data-h', 'true');
+  script.setAttribute('data-p', 'true');
+  script.setAttribute('data-e', 'true');
+  script.setAttribute('data-r', 'true');
+  script.setAttribute('data-sr', '1');
+  document.head.appendChild(script);
+<\/script>`;
 }
 </script>
 
