@@ -270,17 +270,23 @@ function getTrackerSnippet(websiteId: string): string {
             </h3>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div class="p-3 rounded-xl bg-dark-800/40 border border-dark-700/50">
-                <div class="text-[10px] font-bold text-emerald-400 uppercase mb-1">Heatmaps</div>
+              <div class="p-3 rounded-xl bg-dark-800/40 border border-dark-700/50 group hover:border-emerald-500/30 transition-all">
+                <div class="text-[10px] font-bold text-emerald-400 uppercase mb-1 flex items-center gap-1.5">
+                  Heatmaps 
+                  <span class="text-[8px] bg-emerald-500/10 px-1 rounded text-emerald-300">Enhanced</span>
+                </div>
                 <div class="text-[10px] text-dark-400 font-mono">data-heatmap="true"</div>
+              </div>
+              <div class="p-3 rounded-xl bg-dark-800/40 border border-dark-700/50 group hover:border-emerald-500/30 transition-all">
+                <div class="text-[10px] font-bold text-emerald-400 uppercase mb-1 flex items-center gap-1.5">
+                  Real-time
+                  <span class="text-[8px] bg-emerald-500/10 px-1 rounded text-emerald-300">Live Feed</span>
+                </div>
+                <div class="text-[10px] text-dark-400 font-mono">Enabled by default</div>
               </div>
               <div class="p-3 rounded-xl bg-dark-800/40 border border-dark-700/50">
                 <div class="text-[10px] font-bold text-emerald-400 uppercase mb-1">Performance</div>
                 <div class="text-[10px] text-dark-400 font-mono">data-performance="true"</div>
-              </div>
-              <div class="p-3 rounded-xl bg-dark-800/40 border border-dark-700/50">
-                <div class="text-[10px] font-bold text-emerald-400 uppercase mb-1">Errors</div>
-                <div class="text-[10px] text-dark-400 font-mono">data-errors="true"</div>
               </div>
               <div class="p-3 rounded-xl bg-dark-800/40 border border-dark-700/50">
                 <div class="text-[10px] font-bold text-amber-400 uppercase mb-1">Recording</div>

@@ -124,6 +124,28 @@ onUnmounted(() => {
   disconnect();
   if (pollTimer) clearInterval(pollTimer);
 });
+
+function getFlagEmoji(countryCode: string) {
+  if (!countryCode) return "🌐";
+  const codePoints = countryCode
+    .toUpperCase()
+    .split("")
+    .map((char) => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+}
+
+function getDeviceIcon(device: string) {
+  switch (device?.toLowerCase()) {
+    case "mobile":
+      return "📱";
+    case "tablet":
+      return "Tablet";
+    case "smarttv":
+      return "📺";
+    default:
+      return "💻";
+  }
+}
 </script>
 
 <template>
@@ -167,9 +189,9 @@ onUnmounted(() => {
     <!-- Live activity feed -->
     <div class="glass-card p-6">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-sm font-semibold text-dark-200">Live Activity</h3>
+        <h3 class="text-sm font-semibold text-dark-200">Live Activity Feed</h3>
         <span v-if="recentPages.length" class="text-xs text-dark-500"
-          >{{ recentPages.length }} events</span
+          >{{ recentPages.length }} events logged</span
         >
       </div>
       <div class="space-y-2">
@@ -177,31 +199,58 @@ onUnmounted(() => {
           <div
             v-for="(page, i) in recentPages"
             :key="page.time + i"
-            class="flex items-center justify-between py-2.5 px-4 rounded-xl bg-dark-800/30 text-sm group hover:bg-dark-800/50 transition-colors"
+            class="flex items-center justify-between py-3 px-4 rounded-xl bg-dark-800/30 text-sm group hover:bg-dark-800/50 transition-all border border-transparent hover:border-dark-700/50"
           >
             <div class="flex items-center gap-3">
-              <div class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></div>
-              <span class="text-dark-300">
-                <span class="text-dark-500 font-mono text-xs">{{
-                  page.sessionId?.substring(0, 8)
-                }}</span>
-                viewed a page
-              </span>
-              <span
-                v-if="page.pageViews"
-                class="text-[10px] px-1.5 py-0.5 rounded-md bg-primary-500/15 text-primary-400"
-                >{{ page.pageViews }}
-                {{ page.pageViews === 1 ? "page" : "pages" }}</span
-              >
+              <span class="text-lg" :title="page.country">{{
+                getFlagEmoji(page.country)
+              }}</span>
+              <div class="flex flex-col">
+                <div class="flex items-center gap-2">
+                  <span class="text-dark-200 font-medium">
+                    {{ getDeviceIcon(page.device) }}
+                    <span class="text-dark-500 font-mono text-xs ml-1">{{
+                      page.sessionId?.substring(0, 8) || "Anonymous"
+                    }}</span>
+                  </span>
+                  <span class="text-dark-500 text-xs">viewed</span>
+                  <span
+                    class="text-primary-400 font-mono text-[11px] truncate max-w-[200px]"
+                    >{{ page.path || "/" }}</span
+                  >
+                </div>
+                <div
+                  v-if="page.pageViews > 1 || page.events > 0"
+                  class="flex gap-2 mt-1"
+                >
+                  <span
+                    v-if="page.pageViews > 1"
+                    class="text-[9px] px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 font-bold uppercase tracking-wider"
+                  >
+                    {{ page.pageViews }} Page Views
+                  </span>
+                  <span
+                    v-if="page.events > 0"
+                    class="text-[9px] px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-400 font-bold uppercase tracking-wider"
+                  >
+                    {{ page.events }} Custom Events
+                  </span>
+                </div>
+              </div>
             </div>
-            <span class="text-dark-500 text-xs shrink-0">{{ page.time }}</span>
+            <div class="flex flex-col items-end">
+              <span class="text-dark-400 text-[10px] font-medium">{{
+                page.time
+              }}</span>
+            </div>
           </div>
         </transition-group>
-        <div v-if="!recentPages.length" class="text-center py-12 text-dark-500">
-          <div class="text-3xl mb-3">⏳</div>
-          <p class="text-sm">Waiting for live events...</p>
-          <p class="text-xs text-dark-600 mt-1">
-            Visit your website to see real-time activity
+        <div v-if="!recentPages.length" class="text-center py-16 text-dark-500">
+          <div class="text-4xl mb-4 animate-bounce-slow">🛰️</div>
+          <p class="text-sm font-medium">Waiting for data...</p>
+          <p class="text-xs text-dark-600 mt-2 max-w-[200px] mx-auto">
+            Live events will appear here as soon as users interact with your
+            sites.
           </p>
         </div>
       </div>

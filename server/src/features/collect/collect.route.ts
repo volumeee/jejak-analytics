@@ -265,8 +265,11 @@ router.post('/', async (req: Request, res: Response) => {
       broadcastRealtime(body.websiteId, {
         type: 'pageview',
         sessionId: sessionId!,
-        pageViews: body.payload.filter(p => p.type === 'pageview').length,
+        pageViews: pageViewCount,
         events: body.payload.filter(p => p.type === 'event').length,
+        path: body.payload.find(p => p.type === 'pageview')?.path || body.payload.find(p => p.type === 'pageview')?.url,
+        country: geo.country,
+        device: ua.deviceType,
       });
 
       res.status(202).json({ ok: true, sessionId });

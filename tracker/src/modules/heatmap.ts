@@ -64,14 +64,29 @@ export function initHeatmapTracking(): void {
 
 function getSelector(el: HTMLElement | null): string {
   if (!el || el === document.documentElement) return 'html';
+  if (el === document.body) return 'body';
 
-  if (el.id) return `#${el.id}`;
+  let selector = el.tagName.toLowerCase();
 
-  const tag = el.tagName.toLowerCase();
-  const className = el.className && typeof el.className === 'string'
-    ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.')
-    : '';
+  if (el.id) {
+    return `#${el.id}`;
+  }
 
-  return `${tag}${className}`.substring(0, 100);
+  if (el.className && typeof el.className === 'string') {
+    const classes = el.className.trim().split(/\s+/).filter(Boolean).slice(0, 3);
+    if (classes.length) {
+      selector += '.' + classes.join('.');
+    }
+  }
+
+  // Include parent for context if not too deep
+  const parent = el.parentElement;
+  if (parent && parent !== document.body && parent !== document.documentElement) {
+    const parentTag = parent.tagName.toLowerCase();
+    const parentId = parent.id ? `#${parent.id}` : '';
+    return `${parentTag}${parentId} > ${selector}`.substring(0, 100);
+  }
+
+  return selector.substring(0, 100);
 }
 
