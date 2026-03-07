@@ -89,15 +89,30 @@ const chartOpts = {
 
 <template>
   <div class="min-h-screen bg-gray-950 text-white p-8">
-    <div v-if="loading" class="flex items-center justify-center h-64">
-      <div class="text-gray-400">Loading...</div>
+    <!-- Loading State -->
+    <div
+      v-if="loading"
+      class="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in"
+    >
+      <div
+        class="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-4"
+      ></div>
+      <div class="text-gray-400 font-medium tracking-wide uppercase text-sm">
+        Loading Dashboard
+      </div>
     </div>
 
-    <div v-else-if="error" class="flex items-center justify-center h-64">
-      <div class="text-center">
-        <div class="text-4xl mb-4">🔗</div>
-        <p class="text-gray-400 text-lg">{{ error }}</p>
+    <!-- Error State -->
+    <div
+      v-else-if="error"
+      class="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in"
+    >
+      <div
+        class="w-20 h-20 bg-gray-800/50 rounded-full flex items-center justify-center mb-6 text-gray-500 text-4xl"
+      >
+        🔗
       </div>
+      <p class="text-gray-300 font-medium tracking-wide text-lg">{{ error }}</p>
     </div>
 
     <template v-else>

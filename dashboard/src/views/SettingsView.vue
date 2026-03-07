@@ -151,9 +151,13 @@ function getTrackerSnippet(websiteId: string): string {
               </div>
             </div>
             
-            <div v-if="!ws.websites.length" class="text-center py-12 text-dark-600 text-sm">
-              <div class="text-3xl mb-2">🌐</div>
-              {{ lang === 'en' ? 'No websites added yet' : 'Belum ada website' }}
+            <div v-if="!ws.websites.length" class="text-center py-16 flex flex-col items-center justify-center animate-fade-in">
+              <div class="w-16 h-16 bg-dark-800/50 rounded-full flex items-center justify-center mb-4 text-dark-500 text-3xl">
+                🌐
+              </div>
+              <p class="text-dark-300 font-medium tracking-wide">
+                {{ lang === 'en' ? 'No websites added yet' : 'Belum ada website' }}
+              </p>
             </div>
           </div>
         </div>
