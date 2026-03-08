@@ -41,12 +41,13 @@ async function deleteSite(id: string) {
 
 function getTrackerSnippet(websiteId: string): string {
   const apiUrl = "https://your-server.com";
-  return `<script defer type="text/javascript">
+  
+  const snippet = `<script defer type="text/javascript">
   const script = document.createElement('script');
   script.defer = true;
-  script.src = \`\${apiUrl}/jejak.js?v=\${new Date().getTime()}\`;
-  script.setAttribute('data-app-id', '${websiteId}');
-  script.setAttribute('data-host', '\${apiUrl}');
+  script.src = \`${apiUrl}/jejak.js?v=\${new Date().getTime()}\`;
+  script.setAttribute('data-app-id', '##WEBSITE_ID##');
+  script.setAttribute('data-host', '${apiUrl}');
   script.setAttribute('data-h', 'true');
   script.setAttribute('data-p', 'true');
   script.setAttribute('data-e', 'true');
@@ -54,6 +55,12 @@ function getTrackerSnippet(websiteId: string): string {
   script.setAttribute('data-sr', '1');
   document.head.appendChild(script);
 <\\/script>`;
+
+  // Escape HTML tags to be safely displayed in v-html, then bold the ID
+  return snippet
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace("##WEBSITE_ID##", `<span class="text-white font-black bg-primary-600/30 px-1 rounded underline decoration-primary-500">${websiteId}</span>`);
 }
 </script>
 
@@ -210,7 +217,7 @@ function getTrackerSnippet(websiteId: string): string {
           <div v-if="ws.current" class="space-y-4">
             <div class="bg-dark-950/80 rounded-2xl p-5 border border-dark-800 relative group overflow-hidden">
               <div class="absolute top-4 right-4 text-dark-600 text-[10px] uppercase font-bold tracking-widest">HTML</div>
-              <pre class="text-xs text-emerald-400 font-mono overflow-x-auto selection:bg-emerald-500/20 whitespace-pre-wrap">{{ getTrackerSnippet(ws.currentId) }}</pre>
+              <pre class="text-xs text-emerald-400 font-mono overflow-x-auto selection:bg-emerald-500/20 whitespace-pre-wrap" v-html="getTrackerSnippet(ws.currentId)"></pre>
             </div>
           </div>
           <div v-else class="py-10 text-center bg-dark-800/20 rounded-2xl border border-dashed border-dark-700 text-dark-500 text-sm italic">

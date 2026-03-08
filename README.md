@@ -57,7 +57,7 @@ Add this snippet to your website's `<head>`.
 <script defer type="text/javascript">
   const script = document.createElement("script");
   script.defer = true;
-  script.src = "https://your-server.com/jejak.js?v=" + new Date().getTime();
+  script.src = "https://your-server.com/jejak.js?v=v=${new Date().getTime()}";
   script.setAttribute("data-app-id", "YOUR_WEBSITE_ID");
   script.setAttribute("data-host", "https://your-server.com");
   script.setAttribute("data-h", "true");
