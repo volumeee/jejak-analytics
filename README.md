@@ -9,6 +9,8 @@ Premium, lightweight, privacy-first, and self-hosted web analytics.
 - **🔥 Behavior Tracking**: Heatmaps, session tracking, and conversion funnels.
 - **🧪 A/B Testing**: Built-in experimentation with variant assignment and conversion tracking.
 - **🐛 Technical Monitoring**: Performance (Core Web Vitals) and Error tracking with stack traces.
+- **🤝 Shareable Dashboards**: Generate expiring, read-only public links to share with clients.
+- **💾 Data Export**: Download your raw pageviews, sessions, events, and error logs as CSV.
 - **🛡️ Privacy First**: Self-hosted, no cookies required by default, and fully compliant with data standards.
 - **🔌 Plug & Play**: Simple script integration with declarative event tracking.
 
