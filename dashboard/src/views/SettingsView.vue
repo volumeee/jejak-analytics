@@ -194,6 +194,19 @@ function getTrackerSnippet(websiteId: string): string {
             }}
           </p>
 
+          <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-4">
+            <h4 class="text-amber-400 text-xs font-bold uppercase tracking-wider mb-1 flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+              {{ lang === 'en' ? 'Local Development' : 'Pengembangan Lokal' }}
+            </h4>
+            <p class="text-amber-500/80 text-xs leading-relaxed">
+              {{ lang === 'en' 
+                ? 'If you are running Jejak on localhost, your tracked website cannot reach the server. You MUST use a tunnel like Cloudflare Tunnels (cloudflared), Ngrok, or Localtonet to expose port 3100 to the public internet.' 
+                : 'Jika Anda menjalankan Jejak di localhost, website yang dilacak tidak dapat menjangkau server. Anda HARUS menggunakan tunnel seperti Cloudflare Tunnels (cloudflared), Ngrok, atau Localtonet untuk mengekspos port 3100 ke internet publik.' 
+              }}
+            </p>
+          </div>
+
           <div v-if="ws.current" class="space-y-4">
             <div class="bg-dark-950/80 rounded-2xl p-5 border border-dark-800 relative group overflow-hidden">
               <div class="absolute top-4 right-4 text-dark-600 text-[10px] uppercase font-bold tracking-widest">HTML</div>
