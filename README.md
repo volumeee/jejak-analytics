@@ -48,15 +48,18 @@ If you want to modify the source code or build the images yourself:
 
 ## Tracker Integration
 
-Add this tag to your website's `<head>`:
+Add this snippet to your website's `<head>`.
+
+> **⚠️ CRITICAL: Replace `https://your-server.com`**
+> You MUST replace `https://your-server.com` with the actual public URL/IP where your Jejak server is hosted. If you are developing locally, you can use tools like **Cloudflare Tunnels**, **Ngrok**, or **Localtonet** to expose your `localhost:3100` port to the public internet.
 
 ```html
 <script defer type="text/javascript">
   const script = document.createElement("script");
   script.defer = true;
-  script.src = "http://your-server:3100/jejak.js?v=" + new Date().getTime();
+  script.src = "https://your-server.com/jejak.js?v=" + new Date().getTime();
   script.setAttribute("data-app-id", "YOUR_WEBSITE_ID");
-  script.setAttribute("data-host", "http://your-server:3100");
+  script.setAttribute("data-host", "https://your-server.com");
   script.setAttribute("data-h", "true");
   script.setAttribute("data-p", "true");
   script.setAttribute("data-e", "true");

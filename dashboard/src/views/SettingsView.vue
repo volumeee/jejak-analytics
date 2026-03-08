@@ -39,34 +39,21 @@ async function deleteSite(id: string) {
   }
 }
 
-const currentApiUrl = computed(() => {
-  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-  
-  // Smart fallback for dev
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return `${window.location.protocol}//${window.location.hostname}:3100`;
-  }
-  
-  // Production fallback: assume API is on the same origin if not specified via ENV
-  // This is better for open source as it doesn't leak private domains
-  return window.location.origin;
-});
-
 function getTrackerSnippet(websiteId: string): string {
-  const apiUrl = currentApiUrl.value;
+  const apiUrl = "https://your-server.com";
   return `<script defer type="text/javascript">
   const script = document.createElement('script');
   script.defer = true;
-  script.src = '${apiUrl}/jejak.js?v=' + new Date().getTime();
+  script.src = \`\${apiUrl}/jejak.js?v=\${new Date().getTime()}\`;
   script.setAttribute('data-app-id', '${websiteId}');
-  script.setAttribute('data-host', '${apiUrl}');
+  script.setAttribute('data-host', '\${apiUrl}');
   script.setAttribute('data-h', 'true');
   script.setAttribute('data-p', 'true');
   script.setAttribute('data-e', 'true');
   script.setAttribute('data-r', 'true');
   script.setAttribute('data-sr', '1');
   document.head.appendChild(script);
-<\/script>`;
+<\\/script>`;
 }
 </script>
 
@@ -198,9 +185,12 @@ function getTrackerSnippet(websiteId: string): string {
           </h3>
           
           <p class="text-dark-400 text-sm mb-4 leading-relaxed">
+            <span class="font-bold text-amber-500">
+              {{ lang === 'en' ? 'Important: ' : 'Penting: ' }}
+            </span>
             {{ lang === 'en' 
-              ? 'Copy and paste this script tag into the <head> of your website. We use jejak.js (non-tracker name) to bypass aggressive ad-blockers.' 
-              : 'Salin dan tempel tag script ini ke dalam <head> website Anda. Kami menggunakan jejak.js (nama non-tracker) untuk melewati ad-blocker agresif.' 
+              ? 'Replace "https://your-server.com" with your actual Jejak server URL. Copy and paste this script tag into the <head> of your website.' 
+              : 'Ganti "https://your-server.com" dengan URL server Jejak Anda yang sebenarnya. Salin dan tempel tag script ini ke dalam <head> website.' 
             }}
           </p>
 
