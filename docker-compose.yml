@@ -33,7 +33,7 @@ services:
 
   # ── Analytics Server ────────────────────────────
   server:
-    image: ghcr.io/bagose/jejak-server:latest
+    image: ghcr.io/volumeee/jejak-server:latest
     container_name: jejak-server
     restart: unless-stopped
     ports:
@@ -55,7 +55,7 @@ services:
 
   # ── Dashboard ───────────────────────────────────
   dashboard:
-    image: ghcr.io/bagose/jejak-dashboard:latest
+    image: ghcr.io/volumeee/jejak-dashboard:latest
     container_name: jejak-dashboard
     restart: unless-stopped
     ports:

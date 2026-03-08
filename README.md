@@ -19,7 +19,7 @@ Premium, lightweight, privacy-first, and self-hosted web analytics.
 Jejak is distributed as lightweight, pre-built Docker images. You don't need to build from source! Just run this 1-liner in your terminal:
 
 ```bash
-curl -O https://raw.githubusercontent.com/bagose/jejak-analytics/main/docker-compose.yml && docker compose up -d
+curl -O https://raw.githubusercontent.com/volumeee/jejak-analytics/main/docker-compose.yml && docker compose up -d
 ```
 
 > **Note:** This automatically downloads the config, pulls the lightweight `jejak-server` and `jejak-dashboard` images, and sets up PostgreSQL & Redis in the background.
@@ -36,7 +36,7 @@ If you want to modify the source code or build the images yourself:
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/bagose/jejak-analytics.git
+   git clone https://github.com/volumeee/jejak-analytics.git
    cd jejak-analytics
    ```
 
