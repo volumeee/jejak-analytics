@@ -47,6 +47,7 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
 router.get('/:id/analyze', authMiddleware, async (req: Request, res: Response) => {
   const start = (req.query.start as string) || (() => { const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().split('T')[0]; })();
   const end = (req.query.end as string) || new Date().toISOString().split('T')[0];
+  const isLive = start === 'live';
 
   const funnelResult = await query('SELECT * FROM funnels WHERE id = $1', [req.params.id]);
   if (funnelResult.rows.length === 0) { res.status(404).json({ error: 'Funnel not found' }); return; }
@@ -64,31 +65,33 @@ router.get('/:id/analyze', authMiddleware, async (req: Request, res: Response) =
     let result;
 
     if (step.type === 'pageview') {
-      let sql = `
-        SELECT DISTINCT session_id FROM page_views
-        WHERE website_id = $1 AND path = $2
-        AND entered_at >= $3::date AND entered_at < ($4::date + INTERVAL '1 day')
-      `;
-      const params: any[] = [websiteId, step.value, start, end];
+        let sql = `
+          SELECT DISTINCT session_id FROM page_views
+          WHERE website_id = $1 AND path = $2
+          ${isLive ? `AND entered_at >= NOW() - INTERVAL '1 hour'` : `AND entered_at >= $3::date AND entered_at < ($4::date + INTERVAL '1 day')`}
+        `;
+        const params: any[] = isLive ? [websiteId, step.value] : [websiteId, step.value, start, end];
+        let paramIdx = isLive ? 3 : 5;
 
-      if (previousSessionIds && previousSessionIds.length > 0) {
-        sql += ` AND session_id = ANY($5)`;
-        params.push(previousSessionIds);
-      }
+        if (previousSessionIds && previousSessionIds.length > 0) {
+          sql += ` AND session_id = ANY($${paramIdx})`;
+          params.push(previousSessionIds);
+        }
 
       result = await query(sql, params);
     } else {
-      let sql = `
-        SELECT DISTINCT session_id FROM events
-        WHERE website_id = $1 AND name = $2
-        AND created_at >= $3::date AND created_at < ($4::date + INTERVAL '1 day')
-      `;
-      const params: any[] = [websiteId, step.value, start, end];
+        let sql = `
+          SELECT DISTINCT session_id FROM events
+          WHERE website_id = $1 AND name = $2
+          ${isLive ? `AND created_at >= NOW() - INTERVAL '1 hour'` : `AND created_at >= $3::date AND created_at < ($4::date + INTERVAL '1 day')`}
+        `;
+        const params: any[] = isLive ? [websiteId, step.value] : [websiteId, step.value, start, end];
+        let paramIdx = isLive ? 3 : 5;
 
-      if (previousSessionIds && previousSessionIds.length > 0) {
-        sql += ` AND session_id = ANY($5)`;
-        params.push(previousSessionIds);
-      }
+        if (previousSessionIds && previousSessionIds.length > 0) {
+          sql += ` AND session_id = ANY($${paramIdx})`;
+          params.push(previousSessionIds);
+        }
 
       result = await query(sql, params);
     }

@@ -5,7 +5,11 @@ import { authMiddleware } from '../../shared/middleware/auth.middleware.js';
 const router = Router();
 
 // ── Helper: parse date range from query params ───
-function getDateRange(req: Request): { start: string; end: string; prevStart: string; prevEnd: string } {
+function getDateRange(req: Request): { start: string; end: string; prevStart: string; prevEnd: string; isLive: boolean } {
+  if (req.query.start === 'live') {
+    return { start: 'live', end: 'live', prevStart: 'live', prevEnd: 'live', isLive: true };
+  }
+
   const end = (req.query.end as string) || new Date().toISOString().split('T')[0];
   const start = (req.query.start as string) || (() => {
     const d = new Date();
@@ -17,14 +21,18 @@ function getDateRange(req: Request): { start: string; end: string; prevStart: st
   const startDate = new Date(start);
   const endDate = new Date(end);
   const diff = endDate.getTime() - startDate.getTime();
-  const prevEnd = new Date(startDate.getTime() - 1);
-  const prevStart = new Date(prevEnd.getTime() - diff);
+  
+  // Shift strictly back by `diff + 1 day` 
+  const prevEndMs = startDate.getTime() - (1000 * 60 * 60 * 24);
+  const prevEnd = new Date(prevEndMs);
+  const prevStart = new Date(prevEndMs - diff);
 
   return {
     start,
     end,
     prevStart: prevStart.toISOString().split('T')[0],
     prevEnd: prevEnd.toISOString().split('T')[0],
+    isLive: false
   };
 }
 
@@ -33,7 +41,7 @@ router.get('/overview', authMiddleware, async (req: Request, res: Response) => {
   const websiteId = req.query.websiteId as string;
   if (!websiteId) { res.status(400).json({ error: 'websiteId required' }); return; }
 
-  const { start, end, prevStart, prevEnd } = getDateRange(req);
+  const { start, end, prevStart, prevEnd, isLive } = getDateRange(req);
 
   const [current, previous, realtimeResult] = await Promise.all([
     query(`
@@ -47,9 +55,8 @@ router.get('/overview', authMiddleware, async (req: Request, res: Response) => {
       FROM page_views pv
       JOIN sessions s ON s.id = pv.session_id
       WHERE pv.website_id = $1
-        AND pv.entered_at >= $2::date
-        AND pv.entered_at < ($3::date + INTERVAL '1 day')
-    `, [websiteId, start, end]),
+        ${isLive ? `AND pv.entered_at >= NOW() - INTERVAL '1 hour'` : `AND pv.entered_at >= $2::date AND pv.entered_at < ($3::date + INTERVAL '1 day')`}
+    `, isLive ? [websiteId] : [websiteId, start, end]),
 
     query(`
       SELECT
@@ -61,9 +68,8 @@ router.get('/overview', authMiddleware, async (req: Request, res: Response) => {
       FROM page_views pv
       JOIN sessions s ON s.id = pv.session_id
       WHERE pv.website_id = $1
-        AND pv.entered_at >= $2::date
-        AND pv.entered_at < ($3::date + INTERVAL '1 day')
-    `, [websiteId, prevStart, prevEnd]),
+        ${isLive ? `AND pv.entered_at >= NOW() - INTERVAL '2 hours' AND pv.entered_at < NOW() - INTERVAL '1 hour'` : `AND pv.entered_at >= $2::date AND pv.entered_at < ($3::date + INTERVAL '1 day')`}
+    `, isLive ? [websiteId] : [websiteId, prevStart, prevEnd]),
 
     query(`
       SELECT COUNT(DISTINCT fingerprint_hash) as active
@@ -76,23 +82,47 @@ router.get('/overview', authMiddleware, async (req: Request, res: Response) => {
   const cur = current.rows[0] || {};
   const prev = previous.rows[0] || {};
 
+  const parseOrZero = (val: any) => parseFloat(val || '0');
+  
+  const calculateChange = (currentVal: number, prevVal: number): string => {
+    if (prevVal === 0 || isNaN(prevVal)) {
+      if (currentVal > 0) return "—";
+      return "0.0%";
+    }
+    const change = ((currentVal - prevVal) / prevVal) * 100;
+    return `${change >= 0 ? "+" : ""}${change.toFixed(1)}%`;
+  };
+
+  const overview = {
+    totalViews: parseInt(cur.total_views || '0'),
+    totalSessions: parseInt(cur.total_sessions || '0'),
+    uniqueVisitors: parseInt(cur.unique_visitors || '0'),
+    avgDuration: parseInt(cur.avg_duration || '0'),
+    bounceRate: parseFloat(cur.bounce_rate || '0'),
+    pagesPerSession: parseFloat(cur.pages_per_session || '0'),
+    activeVisitors: parseInt(realtimeResult.rows[0]?.active || '0'),
+  };
+
+  const previousStats = {
+    totalViews: parseInt(prev.total_views || '0'),
+    totalSessions: parseInt(prev.total_sessions || '0'),
+    uniqueVisitors: parseInt(prev.unique_visitors || '0'),
+    avgDuration: parseInt(prev.avg_duration || '0'),
+    bounceRate: parseFloat(prev.bounce_rate || '0'),
+  };
+
+  const changes = {
+    totalViews: calculateChange(overview.totalViews, previousStats.totalViews),
+    totalSessions: calculateChange(overview.totalSessions, previousStats.totalSessions),
+    uniqueVisitors: calculateChange(overview.uniqueVisitors, previousStats.uniqueVisitors),
+    avgDuration: calculateChange(overview.avgDuration, previousStats.avgDuration),
+    bounceRate: calculateChange(overview.bounceRate, previousStats.bounceRate),
+  };
+
   res.json({
-    overview: {
-      totalViews: parseInt(cur.total_views || '0'),
-      totalSessions: parseInt(cur.total_sessions || '0'),
-      uniqueVisitors: parseInt(cur.unique_visitors || '0'),
-      avgDuration: parseInt(cur.avg_duration || '0'),
-      bounceRate: parseFloat(cur.bounce_rate || '0'),
-      pagesPerSession: parseFloat(cur.pages_per_session || '0'),
-      activeVisitors: parseInt(realtimeResult.rows[0]?.active || '0'),
-    },
-    previous: {
-      totalViews: parseInt(prev.total_views || '0'),
-      totalSessions: parseInt(prev.total_sessions || '0'),
-      uniqueVisitors: parseInt(prev.unique_visitors || '0'),
-      avgDuration: parseInt(prev.avg_duration || '0'),
-      bounceRate: parseFloat(prev.bounce_rate || '0'),
-    },
+    overview,
+    previous: previousStats,
+    changes,
     period: { start, end, prevStart, prevEnd },
   });
 });
@@ -102,13 +132,16 @@ router.get('/timeseries', authMiddleware, async (req: Request, res: Response) =>
   const websiteId = req.query.websiteId as string;
   if (!websiteId) { res.status(400).json({ error: 'websiteId required' }); return; }
 
-  const { start, end } = getDateRange(req);
-  const unit = (req.query.unit as string) || 'day'; // day, hour
+  const { start, end, isLive } = getDateRange(req);
+  const unit = (req.query.unit as string) || 'day';
 
   let groupBy: string, dateFormat: string;
-  if (unit === 'hour') {
+  if (isLive) {
+    groupBy = `DATE_TRUNC('minute', entered_at)`;
+    dateFormat = 'YYYY-MM-DD"T"HH24:MI:00'; // Full timestamp with minute
+  } else if (unit === 'hour' || start === end) {
     groupBy = `DATE_TRUNC('hour', entered_at)`;
-    dateFormat = 'YYYY-MM-DD HH24:00';
+    dateFormat = 'YYYY-MM-DD"T"HH24:00:00';
   } else {
     groupBy = `DATE(entered_at)`;
     dateFormat = 'YYYY-MM-DD';
@@ -125,11 +158,10 @@ router.get('/timeseries', authMiddleware, async (req: Request, res: Response) =>
     FROM page_views pv
     JOIN sessions s ON s.id = pv.session_id
     WHERE pv.website_id = $1
-      AND pv.entered_at >= $2::date
-      AND pv.entered_at < ($3::date + INTERVAL '1 day')
+      ${isLive ? `AND pv.entered_at >= NOW() - INTERVAL '1 hour'` : `AND pv.entered_at >= $2::date AND pv.entered_at < ($3::date + INTERVAL '1 day')`}
     GROUP BY ${groupBy}
     ORDER BY ${groupBy}
-  `, [websiteId, start, end]);
+  `, isLive ? [websiteId] : [websiteId, start, end]);
 
   res.json({ timeseries: result.rows });
 });
@@ -139,7 +171,7 @@ router.get('/pages', authMiddleware, async (req: Request, res: Response) => {
   const websiteId = req.query.websiteId as string;
   if (!websiteId) { res.status(400).json({ error: 'websiteId required' }); return; }
 
-  const { start, end } = getDateRange(req);
+  const { start, end, isLive } = getDateRange(req);
   const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
 
   const result = await query(`
@@ -151,12 +183,11 @@ router.get('/pages', authMiddleware, async (req: Request, res: Response) => {
       ROUND(AVG(time_on_page)) AS avg_time
     FROM page_views
     WHERE website_id = $1
-      AND entered_at >= $2::date
-      AND entered_at < ($3::date + INTERVAL '1 day')
+      ${isLive ? `AND entered_at >= NOW() - INTERVAL '1 hour'` : `AND entered_at >= $2::date AND entered_at < ($3::date + INTERVAL '1 day')`}
     GROUP BY path
     ORDER BY views DESC
-    LIMIT $4
-  `, [websiteId, start, end, limit]);
+    LIMIT ${isLive ? '$2' : '$4'}
+  `, isLive ? [websiteId, limit] : [websiteId, start, end, limit]);
 
   res.json({ pages: result.rows });
 });
@@ -166,8 +197,8 @@ router.get('/sources', authMiddleware, async (req: Request, res: Response) => {
   const websiteId = req.query.websiteId as string;
   if (!websiteId) { res.status(400).json({ error: 'websiteId required' }); return; }
 
-  const { start, end } = getDateRange(req);
-  const type = (req.query.type as string) || 'referrer'; // referrer, utm_source, utm_medium, utm_campaign
+  const { start, end, isLive } = getDateRange(req);
+  const type = (req.query.type as string) || 'referrer';
 
   let column: string;
   switch (type) {
@@ -185,12 +216,11 @@ router.get('/sources', authMiddleware, async (req: Request, res: Response) => {
       ROUND(100.0 * COUNT(*) FILTER (WHERE is_bounce) / NULLIF(COUNT(*), 0), 1) AS bounce_rate
     FROM sessions
     WHERE website_id = $1
-      AND started_at >= $2::date
-      AND started_at < ($3::date + INTERVAL '1 day')
+      ${isLive ? `AND started_at >= NOW() - INTERVAL '1 hour'` : `AND started_at >= $2::date AND started_at < ($3::date + INTERVAL '1 day')`}
     GROUP BY ${column}
     ORDER BY sessions DESC
     LIMIT 20
-  `, [websiteId, start, end]);
+  `, isLive ? [websiteId] : [websiteId, start, end]);
 
   res.json({ sources: result.rows });
 });
@@ -200,8 +230,8 @@ router.get('/visitors', authMiddleware, async (req: Request, res: Response) => {
   const websiteId = req.query.websiteId as string;
   if (!websiteId) { res.status(400).json({ error: 'websiteId required' }); return; }
 
-  const { start, end } = getDateRange(req);
-  const by = (req.query.by as string) || 'country'; // country, browser, os, device, language, screen
+  const { start, end, isLive } = getDateRange(req);
+  const by = (req.query.by as string) || 'country';
 
   let selectCol: string, groupCol: string;
   switch (by) {
@@ -223,13 +253,12 @@ router.get('/visitors', authMiddleware, async (req: Request, res: Response) => {
       COUNT(DISTINCT fingerprint_hash) AS visitors
     FROM sessions
     WHERE website_id = $1
-      AND started_at >= $2::date
-      AND started_at < ($3::date + INTERVAL '1 day')
+      ${isLive ? `AND started_at >= NOW() - INTERVAL '1 hour'` : `AND started_at >= $2::date AND started_at < ($3::date + INTERVAL '1 day')`}
       AND ${by === 'screen' ? 'screen_width' : selectCol} IS NOT NULL
     GROUP BY ${groupCol}
     ORDER BY sessions DESC
     LIMIT 20
-  `, [websiteId, start, end]);
+  `, isLive ? [websiteId] : [websiteId, start, end]);
 
   res.json({ visitors: result.rows });
 });
@@ -239,7 +268,7 @@ router.get('/events', authMiddleware, async (req: Request, res: Response) => {
   const websiteId = req.query.websiteId as string;
   if (!websiteId) { res.status(400).json({ error: 'websiteId required' }); return; }
 
-  const { start, end } = getDateRange(req);
+  const { start, end, isLive } = getDateRange(req);
 
   const result = await query(`
     SELECT
@@ -248,12 +277,11 @@ router.get('/events', authMiddleware, async (req: Request, res: Response) => {
       COUNT(DISTINCT session_id) AS sessions
     FROM events
     WHERE website_id = $1
-      AND created_at >= $2::date
-      AND created_at < ($3::date + INTERVAL '1 day')
+      ${isLive ? `AND created_at >= NOW() - INTERVAL '1 hour'` : `AND created_at >= $2::date AND created_at < ($3::date + INTERVAL '1 day')`}
     GROUP BY name
     ORDER BY count DESC
     LIMIT 20
-  `, [websiteId, start, end]);
+  `, isLive ? [websiteId] : [websiteId, start, end]);
 
   res.json({ events: result.rows });
 });

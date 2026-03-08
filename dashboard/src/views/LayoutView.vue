@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import { useAuthStore, useWebsiteStore, useDateStore } from "../stores/index";
 import { useRouter, useRoute } from "vue-router";
+import { api } from "../lib/api";
 
 const router = useRouter();
 const route = useRoute();
@@ -9,6 +10,15 @@ const auth = useAuthStore();
 const websiteStore = useWebsiteStore();
 const dateStore = useDateStore();
 const sidebarOpen = ref(true);
+
+// Export state
+const isExportOpen = ref(false);
+
+// Share state
+const isShareModalOpen = ref(false);
+const shareExpiresIn = ref<number | null>(24);
+const generatedShareUrl = ref("");
+const isSharing = ref(false);
 
 // Fetch websites on mount
 websiteStore.fetchWebsites();
@@ -67,6 +77,12 @@ const navSections = computed(() => [
 ]);
 
 function isPresetActive(days: number): boolean {
+  if (days === -1) {
+    return dateStore.start === "live";
+  }
+  if (dateStore.start === "live") {
+    return false;
+  }
   const now = new Date();
   if (days === 0) {
     return dateStore.start === dateStore.end;
@@ -79,6 +95,64 @@ function isPresetActive(days: number): boolean {
 function logout() {
   auth.logout();
   router.push("/login");
+}
+
+function handleExport(type: string, format: string = "csv") {
+  if (!websiteStore.currentId) return;
+  const baseUrl =
+    api.defaults.baseURL || import.meta.env.VITE_API_URL + "/api" || "/api";
+  const url = `${baseUrl}/export/${type}?websiteId=${websiteStore.currentId}&start=${dateStore.start}&end=${dateStore.end}&format=${format}`;
+
+  // Use a hidden iframe or link to trigger download with auth token in headers?
+  // Since it's a GET, browser can just open URL if auth is via cookies.
+  // Wait, we use Bearer token. We need to fetch and trigger download.
+  fetchExport(url, `${type}_export.${format}`);
+  isExportOpen.value = false;
+}
+
+async function fetchExport(url: string, filename: string) {
+  try {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${auth.token}` },
+    });
+    if (!res.ok) throw new Error("Export failed");
+    const blob = await res.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (err) {
+    console.error(err);
+    alert("Export failed");
+  }
+}
+
+async function generateShareLink() {
+  if (!websiteStore.currentId) return;
+  isSharing.value = true;
+  try {
+    const res = await api.post("/share", {
+      websiteId: websiteStore.currentId,
+      expiresIn: shareExpiresIn.value,
+    });
+    // shareUrl comes formatted nicely, but let's transform it to current origin just in case
+    const sharePath = `/#/shared/${res.data.token}`;
+    generatedShareUrl.value = window.location.origin + sharePath;
+  } catch (err) {
+    console.error(err);
+    alert("Failed to generate share link");
+  } finally {
+    isSharing.value = false;
+  }
+}
+
+function copyShareUrl() {
+  navigator.clipboard.writeText(generatedShareUrl.value);
+  alert("Copied to clipboard!");
 }
 </script>
 
@@ -198,7 +272,7 @@ function logout() {
     <div class="flex-1 flex flex-col overflow-hidden">
       <!-- Top bar -->
       <header
-        class="h-16 border-b border-dark-800/50 flex items-center justify-between px-6 bg-dark-900/40 backdrop-blur-sm shrink-0"
+        class="h-16 border-b border-dark-800/50 flex items-center justify-between px-6 bg-dark-900/40 backdrop-blur-sm shrink-0 z-50 relative"
       >
         <div class="flex items-center gap-4">
           <button
@@ -222,22 +296,117 @@ function logout() {
           <h1 class="text-lg font-semibold text-dark-100">{{ route.name }}</h1>
         </div>
 
-        <!-- Date range picker -->
-        <div class="flex items-center gap-2">
-          <div class="flex gap-1 bg-dark-800/60 rounded-xl p-1">
-            <button
-              v-for="preset in dateStore.presets"
-              :key="preset.days"
-              @click="dateStore.setRange(preset.days)"
-              :class="[
-                'px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200',
-                isPresetActive(preset.days)
-                  ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/25'
-                  : 'text-dark-400 hover:text-dark-200 hover:bg-dark-700/50',
-              ]"
+        <!-- Right Side Header Controls -->
+        <div class="flex items-center gap-3">
+          <!-- Share Button -->
+          <button
+            @click="
+              isShareModalOpen = true;
+              generatedShareUrl = '';
+            "
+            title="Share Dashboard"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-dark-800/60 border border-dark-700/50 text-dark-300 hover:text-white hover:bg-dark-700 hover:border-dark-600 transition-all text-sm font-medium"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              {{ preset.label }}
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+              ></path>
+            </svg>
+            <span class="hidden sm:inline">Share</span>
+          </button>
+
+          <!-- Export Dropdown -->
+          <div class="relative">
+            <!-- Clickaway overlay to close dropdown -->
+            <div
+              v-if="isExportOpen"
+              @click="isExportOpen = false"
+              class="fixed inset-0 z-40"
+            ></div>
+
+            <button
+              @click="isExportOpen = !isExportOpen"
+              title="Export Data"
+              class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-dark-800/60 border border-dark-700/50 text-dark-300 hover:text-white hover:bg-dark-700 hover:border-dark-600 transition-all text-sm font-medium"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                ></path>
+              </svg>
+              <span class="hidden sm:inline">Export</span>
             </button>
+            <div
+              v-if="isExportOpen"
+              class="absolute right-0 mt-2 w-48 bg-dark-800 border border-dark-700 rounded-xl shadow-xl overflow-hidden z-50 animate-fade-in"
+            >
+              <div
+                class="px-3 py-2 text-xs font-semibold text-dark-400 bg-dark-900 border-b border-dark-700/50"
+              >
+                Export to CSV
+              </div>
+              <button
+                @click="handleExport('pageviews', 'csv')"
+                class="w-full text-left px-4 py-2 text-sm text-dark-300 hover:text-white hover:bg-primary-600/20 transition-colors"
+              >
+                Page Views
+              </button>
+              <button
+                @click="handleExport('sessions', 'csv')"
+                class="w-full text-left px-4 py-2 text-sm text-dark-300 hover:text-white hover:bg-primary-600/20 transition-colors"
+              >
+                Sessions
+              </button>
+              <button
+                @click="handleExport('events', 'csv')"
+                class="w-full text-left px-4 py-2 text-sm text-dark-300 hover:text-white hover:bg-primary-600/20 transition-colors"
+              >
+                Events
+              </button>
+              <button
+                @click="handleExport('errors', 'csv')"
+                class="w-full text-left px-4 py-2 text-sm text-dark-300 hover:text-white hover:bg-primary-600/20 transition-colors"
+              >
+                Error Logs
+              </button>
+            </div>
+          </div>
+
+          <div class="h-6 w-px bg-dark-700/50 mx-1"></div>
+
+          <!-- Date range picker -->
+          <div class="flex items-center gap-2">
+            <div class="flex gap-1 bg-dark-800/60 rounded-xl p-1">
+              <button
+                v-for="preset in dateStore.presets"
+                :key="preset.days"
+                @click="dateStore.setRange(preset.days)"
+                :class="[
+                  'px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200',
+                  isPresetActive(preset.days)
+                    ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/25'
+                    : 'text-dark-400 hover:text-dark-200 hover:bg-dark-700/50',
+                ]"
+              >
+                {{ preset.label }}
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -250,6 +419,108 @@ function logout() {
           </transition>
         </router-view>
       </main>
+    </div>
+
+    <!-- Share Modal -->
+    <div
+      v-if="isShareModalOpen"
+      class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
+      @click.self="isShareModalOpen = false"
+    >
+      <div
+        class="bg-dark-900 border border-dark-800 rounded-2xl w-full max-w-md shadow-2xl p-6 relative"
+      >
+        <h2 class="text-xl font-bold text-white mb-2">Share Dashboard</h2>
+        <p class="text-dark-400 text-sm mb-6">
+          Create a read-only link to share stats with clients or public.
+        </p>
+
+        <div class="space-y-4">
+          <div class="relative">
+            <label class="block text-xs font-medium text-dark-400 mb-1"
+              >Link Expiration</label
+            >
+            <div class="relative">
+              <select
+                v-model="shareExpiresIn"
+                style="appearance: none; background-image: none"
+                class="w-full bg-dark-800 border border-dark-700 rounded-lg pl-4 pr-10 py-2.5 text-white focus:outline-none focus:border-primary-500 appearance-none"
+              >
+                <option :value="1">1 Hour</option>
+                <option :value="24">24 Hours</option>
+                <option :value="168">7 Days</option>
+                <option :value="720">30 Days</option>
+                <option :value="null">Never Expires</option>
+              </select>
+              <div
+                class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-dark-400"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <button
+            v-if="!generatedShareUrl"
+            @click="generateShareLink"
+            :disabled="isSharing"
+            class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-primary-600 to-indigo-600 text-white font-medium px-4 py-3 rounded-xl hover:from-primary-500 hover:to-indigo-500 transition-all"
+          >
+            <span v-if="!isSharing">Generate Link</span>
+            <span v-else class="animate-spin text-xl leading-none">⏳</span>
+          </button>
+
+          <div v-else class="animate-fade-in space-y-4 mt-6">
+            <div
+              class="p-3 bg-dark-800 border border-primary-500/30 rounded-xl flex items-center gap-3"
+            >
+              <input
+                type="text"
+                readonly
+                :value="generatedShareUrl"
+                class="w-full bg-transparent text-primary-400 text-sm outline-none font-medium truncate"
+              />
+            </div>
+            <button
+              @click="copyShareUrl"
+              class="w-full bg-dark-700 hover:bg-dark-600 text-white font-medium px-4 py-3 rounded-xl transition-all shadow-sm"
+            >
+              Copy Link
+            </button>
+          </div>
+        </div>
+
+        <button
+          @click="isShareModalOpen = false"
+          class="absolute top-4 right-4 text-dark-400 hover:text-white transition-colors bg-dark-800 rounded-full p-1.5 focus:outline-none focus:ring-2 focus:ring-dark-600"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 </template>

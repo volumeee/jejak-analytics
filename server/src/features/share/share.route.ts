@@ -69,6 +69,7 @@ router.get('/:token/stats', async (req: Request, res: Response) => {
     const d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().split('T')[0];
   })();
   const end = (req.query.end as string) || new Date().toISOString().split('T')[0];
+  const isLive = start === 'live';
 
   const [overviewRes, timeseriesRes, pagesRes] = await Promise.all([
     query(`
@@ -80,18 +81,21 @@ router.get('/:token/stats', async (req: Request, res: Response) => {
         ROUND(100.0 * COUNT(*) FILTER (WHERE s.is_bounce) / NULLIF(COUNT(DISTINCT pv.session_id), 0), 1) AS bounce_rate
       FROM page_views pv
       JOIN sessions s ON s.id = pv.session_id
-      WHERE pv.website_id = $1 AND pv.entered_at >= $2::date AND pv.entered_at < ($3::date + INTERVAL '1 day')
-    `, [link.websiteId, start, end]),
+      WHERE pv.website_id = $1 
+      ${isLive ? `AND pv.entered_at >= NOW() - INTERVAL '1 hour'` : `AND pv.entered_at >= $2::date AND pv.entered_at < ($3::date + INTERVAL '1 day')`}
+    `, isLive ? [link.websiteId] : [link.websiteId, start, end]),
     query(`
       SELECT TO_CHAR(DATE(entered_at), 'YYYY-MM-DD') AS date, COUNT(*) AS views, COUNT(DISTINCT session_id) AS sessions
-      FROM page_views WHERE website_id = $1 AND entered_at >= $2::date AND entered_at < ($3::date + INTERVAL '1 day')
+      FROM page_views WHERE website_id = $1 
+      ${isLive ? `AND entered_at >= NOW() - INTERVAL '1 hour'` : `AND entered_at >= $2::date AND entered_at < ($3::date + INTERVAL '1 day')`}
       GROUP BY DATE(entered_at) ORDER BY DATE(entered_at)
-    `, [link.websiteId, start, end]),
+    `, isLive ? [link.websiteId] : [link.websiteId, start, end]),
     query(`
       SELECT path, COUNT(*) AS views, COUNT(DISTINCT session_id) AS visitors
-      FROM page_views WHERE website_id = $1 AND entered_at >= $2::date AND entered_at < ($3::date + INTERVAL '1 day')
+      FROM page_views WHERE website_id = $1 
+      ${isLive ? `AND entered_at >= NOW() - INTERVAL '1 hour'` : `AND entered_at >= $2::date AND entered_at < ($3::date + INTERVAL '1 day')`}
       GROUP BY path ORDER BY views DESC LIMIT 10
-    `, [link.websiteId, start, end]),
+    `, isLive ? [link.websiteId] : [link.websiteId, start, end]),
   ]);
 
   res.json({

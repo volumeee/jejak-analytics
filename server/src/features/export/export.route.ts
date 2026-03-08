@@ -12,6 +12,7 @@ router.get('/:type', authMiddleware, async (req: Request, res: Response) => {
   const format = (req.query.format as string) || 'json';
   const start = (req.query.start as string) || (() => { const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().split('T')[0]; })();
   const end = (req.query.end as string) || new Date().toISOString().split('T')[0];
+  const isLive = start === 'live';
 
   let sql: string;
   let filename: string;
@@ -19,26 +20,30 @@ router.get('/:type', authMiddleware, async (req: Request, res: Response) => {
   switch (req.params.type) {
     case 'pageviews':
       sql = `SELECT url, path, title, referrer, entered_at, time_on_page
-             FROM page_views WHERE website_id = $1 AND entered_at >= $2::date AND entered_at < ($3::date + INTERVAL '1 day')
+             FROM page_views WHERE website_id = $1 
+             ${isLive ? `AND entered_at >= NOW() - INTERVAL '1 hour'` : `AND entered_at >= $2::date AND entered_at < ($3::date + INTERVAL '1 day')`}
              ORDER BY entered_at DESC LIMIT 10000`;
       filename = 'pageviews';
       break;
     case 'events':
       sql = `SELECT name, properties, url, created_at
-             FROM events WHERE website_id = $1 AND created_at >= $2::date AND created_at < ($3::date + INTERVAL '1 day')
+             FROM events WHERE website_id = $1 
+             ${isLive ? `AND created_at >= NOW() - INTERVAL '1 hour'` : `AND created_at >= $2::date AND created_at < ($3::date + INTERVAL '1 day')`}
              ORDER BY created_at DESC LIMIT 10000`;
       filename = 'events';
       break;
     case 'sessions':
       sql = `SELECT fingerprint_hash, started_at, duration, is_bounce, entry_url, exit_url,
                     country, city, device_type, browser, os, referrer_domain, utm_source, utm_campaign
-             FROM sessions WHERE website_id = $1 AND started_at >= $2::date AND started_at < ($3::date + INTERVAL '1 day')
+             FROM sessions WHERE website_id = $1 
+             ${isLive ? `AND started_at >= NOW() - INTERVAL '1 hour'` : `AND started_at >= $2::date AND started_at < ($3::date + INTERVAL '1 day')`}
              ORDER BY started_at DESC LIMIT 10000`;
       filename = 'sessions';
       break;
     case 'errors':
       sql = `SELECT message, source, line, col, url, browser, os, created_at
-             FROM error_logs WHERE website_id = $1 AND created_at >= $2::date AND created_at < ($3::date + INTERVAL '1 day')
+             FROM error_logs WHERE website_id = $1 
+             ${isLive ? `AND created_at >= NOW() - INTERVAL '1 hour'` : `AND created_at >= $2::date AND created_at < ($3::date + INTERVAL '1 day')`}
              ORDER BY created_at DESC LIMIT 10000`;
       filename = 'errors';
       break;
@@ -47,7 +52,7 @@ router.get('/:type', authMiddleware, async (req: Request, res: Response) => {
       return;
   }
 
-  const result = await query(sql, [websiteId, start, end]);
+  const result = await query(sql, isLive ? [websiteId] : [websiteId, start, end]);
 
   if (format === 'csv') {
     const rows = result.rows;

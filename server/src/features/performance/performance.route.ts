@@ -11,6 +11,7 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
 
   const start = (req.query.start as string) || (() => { const d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().split('T')[0]; })();
   const end = (req.query.end as string) || new Date().toISOString().split('T')[0];
+  const isLive = start === 'live';
 
   const result = await query(`
     SELECT
@@ -35,9 +36,8 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
       ROUND(100.0 * COUNT(*) FILTER (WHERE ttfb <= 800) / NULLIF(COUNT(ttfb), 0), 1) AS ttfb_good
     FROM performance_metrics
     WHERE website_id = $1
-      AND created_at >= $2::date
-      AND created_at < ($3::date + INTERVAL '1 day')
-  `, [websiteId, start, end]);
+      ${isLive ? `AND created_at >= NOW() - INTERVAL '1 hour'` : `AND created_at >= $2::date AND created_at < ($3::date + INTERVAL '1 day')`}
+  `, isLive ? [websiteId] : [websiteId, start, end]);
 
   res.json({ performance: result.rows[0], period: { start, end } });
 });
@@ -49,6 +49,7 @@ router.get('/pages', authMiddleware, async (req: Request, res: Response) => {
 
   const start = (req.query.start as string) || (() => { const d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().split('T')[0]; })();
   const end = (req.query.end as string) || new Date().toISOString().split('T')[0];
+  const isLive = start === 'live';
 
   const result = await query(`
     SELECT
@@ -60,12 +61,11 @@ router.get('/pages', authMiddleware, async (req: Request, res: Response) => {
       COUNT(*) AS samples
     FROM performance_metrics
     WHERE website_id = $1
-      AND created_at >= $2::date
-      AND created_at < ($3::date + INTERVAL '1 day')
+      ${isLive ? `AND created_at >= NOW() - INTERVAL '1 hour'` : `AND created_at >= $2::date AND created_at < ($3::date + INTERVAL '1 day')`}
     GROUP BY path
     ORDER BY samples DESC
     LIMIT 20
-  `, [websiteId, start, end]);
+  `, isLive ? [websiteId] : [websiteId, start, end]);
 
   res.json({ pages: result.rows });
 });
@@ -77,6 +77,7 @@ router.get('/timeseries', authMiddleware, async (req: Request, res: Response) =>
 
   const start = (req.query.start as string) || (() => { const d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().split('T')[0]; })();
   const end = (req.query.end as string) || new Date().toISOString().split('T')[0];
+  const isLive = start === 'live';
 
   const result = await query(`
     SELECT
@@ -88,11 +89,10 @@ router.get('/timeseries', authMiddleware, async (req: Request, res: Response) =>
       COUNT(*) AS samples
     FROM performance_metrics
     WHERE website_id = $1
-      AND created_at >= $2::date
-      AND created_at < ($3::date + INTERVAL '1 day')
+      ${isLive ? `AND created_at >= NOW() - INTERVAL '1 hour'` : `AND created_at >= $2::date AND created_at < ($3::date + INTERVAL '1 day')`}
     GROUP BY DATE(created_at)
     ORDER BY DATE(created_at)
-  `, [websiteId, start, end]);
+  `, isLive ? [websiteId] : [websiteId, start, end]);
 
   res.json({ timeseries: result.rows });
 });

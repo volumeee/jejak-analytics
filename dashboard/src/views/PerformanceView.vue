@@ -53,7 +53,39 @@ function getVitalStatus(
 </script>
 
 <template>
-  <div class="space-y-6" v-if="perf">
+  <div v-if="loading" class="space-y-6 animate-pulse">
+    <!-- Skeleton Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div
+        v-for="i in 4"
+        :key="`skel-${i}`"
+        class="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5"
+      >
+        <div class="h-4 bg-dark-800/50 rounded w-16 mb-4"></div>
+        <div class="h-8 bg-dark-800/50 rounded w-24 mb-2"></div>
+        <div class="h-3 bg-dark-800/50 rounded w-32"></div>
+      </div>
+    </div>
+
+    <div class="h-4 w-32 bg-dark-800/30 rounded ml-auto"></div>
+
+    <!-- Skeleton Table -->
+    <div class="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-6">
+      <div class="h-5 bg-dark-800/50 rounded w-40 mb-6"></div>
+      <div class="space-y-4">
+        <div
+          class="h-4 bg-dark-800/30 rounded w-full"
+          v-for="i in 5"
+          :key="`skel-tab-${i}`"
+        ></div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="space-y-6 animate-fade-in"
+    v-else-if="perf && parseInt(perf.samples || '0') > 0"
+  >
     <!-- Core Web Vitals Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <div
@@ -138,33 +170,7 @@ function getVitalStatus(
             <th class="text-right py-3">Samples</th>
           </tr>
         </thead>
-        <tbody v-if="loading">
-          <tr
-            v-for="i in 5"
-            :key="`skeleton-${i}`"
-            class="animate-pulse border-b border-dark-800/30"
-          >
-            <td class="py-3.5 pl-3">
-              <div class="h-4 bg-dark-800/40 rounded w-3/4"></div>
-            </td>
-            <td class="py-3.5 px-3">
-              <div class="h-4 bg-dark-800/40 rounded w-16 ml-auto"></div>
-            </td>
-            <td class="py-3.5 px-3">
-              <div class="h-4 bg-dark-800/40 rounded w-16 ml-auto"></div>
-            </td>
-            <td class="py-3.5 px-3">
-              <div class="h-4 bg-dark-800/40 rounded w-12 ml-auto"></div>
-            </td>
-            <td class="py-3.5 px-3">
-              <div class="h-4 bg-dark-800/40 rounded w-16 ml-auto"></div>
-            </td>
-            <td class="py-3.5 pr-3">
-              <div class="h-4 bg-dark-800/40 rounded w-12 ml-auto"></div>
-            </td>
-          </tr>
-        </tbody>
-        <tbody v-else-if="pages.length > 0">
+        <tbody v-if="pages.length > 0">
           <tr
             v-for="p in pages"
             :key="p.path"
@@ -236,7 +242,7 @@ function getVitalStatus(
     </div>
   </div>
   <div
-    v-else-if="!loading"
+    v-else
     class="text-center py-20 flex flex-col items-center justify-center animate-fade-in"
   >
     <div

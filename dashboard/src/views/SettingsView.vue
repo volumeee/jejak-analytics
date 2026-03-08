@@ -30,6 +30,15 @@ async function addWebsite() {
   }
 }
 
+async function deleteSite(id: string) {
+  if (!confirm(lang.value === 'en' ? 'Are you sure you want to delete this website? All analytics data will be lost.' : 'Apakah Anda yakin ingin menghapus website ini? Semua data analytics akan hilang.')) return;
+  try {
+    await ws.deleteWebsite(id);
+  } catch (e: any) {
+    message.value = `❌ ${e.response?.data?.error || "Failed to delete website"}`;
+  }
+}
+
 const currentApiUrl = computed(() => {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
   
@@ -142,17 +151,28 @@ function getTrackerSnippet(websiteId: string): string {
                   <div class="text-sm font-bold text-dark-100">{{ w.name }}</div>
                   <div class="text-[10px] text-dark-500 font-mono mt-0.5">{{ w.domain }}</div>
                 </div>
-                <button
-                  @click="ws.selectWebsite(w)"
-                  :class="
-                    ws.currentId === w.id
-                      ? 'bg-primary-500 text-white shadow-md'
-                      : 'bg-dark-700 text-dark-400 hover:text-dark-100 hover:bg-dark-600'
-                  "
-                  class="text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all uppercase tracking-wider"
-                >
-                  {{ ws.currentId === w.id ? (lang === 'en' ? 'Active' : 'Aktif') : (lang === 'en' ? 'Select' : 'Pilih') }}
-                </button>
+                <div class="flex items-center gap-2">
+                  <button
+                    @click="deleteSite(w.id)"
+                    class="text-red-400 hover:text-red-300 hover:bg-red-400/10 px-2 py-1.5 rounded-lg transition-all"
+                    title="Delete Website"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                  <button
+                    @click="ws.selectWebsite(w)"
+                    :class="
+                      ws.currentId === w.id
+                        ? 'bg-primary-500 text-white shadow-md'
+                        : 'bg-dark-700 text-dark-400 hover:text-dark-100 hover:bg-dark-600'
+                    "
+                    class="text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all uppercase tracking-wider"
+                  >
+                    {{ ws.currentId === w.id ? (lang === 'en' ? 'Active' : 'Aktif') : (lang === 'en' ? 'Select' : 'Pilih') }}
+                  </button>
+                </div>
               </div>
             </div>
             

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from "vue";
+import { ref, watch, onMounted, onUnmounted, computed } from "vue";
 import { useWebsiteStore, useDateStore } from "../stores/index";
 import { api } from "../lib/api";
 import { Line } from "vue-chartjs";
@@ -29,6 +29,7 @@ const dateStore = useDateStore();
 
 const overview = ref<any>(null);
 const previous = ref<any>(null);
+const changes = ref<any>(null);
 const timeseries = ref<any[]>([]);
 const topPages = ref<any[]>([]);
 const topSources = ref<any[]>([]);
@@ -76,6 +77,7 @@ async function fetchData() {
 
     overview.value = overviewRes.data.overview;
     previous.value = overviewRes.data.previous;
+    changes.value = overviewRes.data.changes;
     timeseries.value = timeseriesRes.data.timeseries;
     topPages.value = pagesRes.data.pages;
     topSources.value = sourcesRes.data.sources;
@@ -91,20 +93,13 @@ watch(
   [() => websiteStore.currentId, () => dateStore.start, () => dateStore.end],
   fetchData,
 );
-onMounted(fetchData);
-
-function calcChange(current: number, prev: number): string {
-  if (prev === 0 || prev === null || prev === undefined) {
-    if (current > 0) return "New";
-    return "—";
-  }
-  const change = ((current - prev) / prev) * 100;
-  return `${change >= 0 ? "+" : ""}${change.toFixed(1)}%`;
-}
+onMounted(() => {
+  fetchData();
+});
 
 function isChangePositive(change: string, invert = false): boolean {
-  if (change === "New") return !invert;
-  if (change === "—") return true;
+  if (!change) return true;
+  if (change === "0.0%" || change === "—") return true;
   const positive = change.startsWith("+") && change !== "+0.0%";
   return invert ? !positive : positive;
 }
@@ -127,7 +122,24 @@ const chartData = computed(() => {
   if (!timeseries.value?.length) return { labels: [], datasets: [] };
   return {
     labels: timeseries.value.map((d: any) => {
-      const date = new Date(d.date);
+      // Append Z to parse as UTC? NO, we assume the backend returns local time string.
+      // E.g '2026-03-08T09:40:00'
+      const dateStr = d.date.includes("T") ? d.date : d.date + "T00:00:00";
+      const date = new Date(dateStr);
+
+      if (dateStore.start === "live") {
+        return date.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      if (dateStore.start === dateStore.end) {
+        return date.toLocaleTimeString("en-US", {
+          hour: "numeric",
+        });
+      }
+
       return date.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
@@ -215,13 +227,13 @@ const chartOptions = {
 
 const kpiCards = computed(() => {
   const o = overview.value;
-  const p = previous.value || {};
+  const c = changes.value || {};
   if (!o) return [];
   return [
     {
       label: "Unique Visitors",
       value: formatNumber(o.uniqueVisitors),
-      change: calcChange(o.uniqueVisitors, p.uniqueVisitors),
+      change: c.uniqueVisitors,
       icon: "👥",
       gradient: "from-blue-500/20 to-cyan-500/20",
       iconBg: "bg-blue-500/15",
@@ -229,7 +241,7 @@ const kpiCards = computed(() => {
     {
       label: "Page Views",
       value: formatNumber(o.totalViews),
-      change: calcChange(o.totalViews, p.totalViews),
+      change: c.totalViews,
       icon: "📊",
       gradient: "from-violet-500/20 to-purple-500/20",
       iconBg: "bg-violet-500/15",
@@ -237,7 +249,7 @@ const kpiCards = computed(() => {
     {
       label: "Avg Duration",
       value: formatDuration(o.avgDuration),
-      change: calcChange(o.avgDuration, p.avgDuration),
+      change: c.avgDuration,
       icon: "⏱️",
       gradient: "from-emerald-500/20 to-green-500/20",
       iconBg: "bg-emerald-500/15",
@@ -245,7 +257,7 @@ const kpiCards = computed(() => {
     {
       label: "Bounce Rate",
       value: `${o.bounceRate || 0}%`,
-      change: calcChange(o.bounceRate || 0, p.bounceRate || 0),
+      change: c.bounceRate,
       icon: "↗️",
       gradient: "from-amber-500/20 to-orange-500/20",
       iconBg: "bg-amber-500/15",

@@ -11,6 +11,7 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
 
   const start = (req.query.start as string) || (() => { const d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().split('T')[0]; })();
   const end = (req.query.end as string) || new Date().toISOString().split('T')[0];
+  const isLive = start === 'live';
 
   // Group errors by message
   const result = await query(`
@@ -25,18 +26,17 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
       (array_agg(stack ORDER BY created_at DESC))[1] AS last_stack
     FROM error_logs
     WHERE website_id = $1
-      AND created_at >= $2::date
-      AND created_at < ($3::date + INTERVAL '1 day')
+      ${isLive ? `AND created_at >= NOW() - INTERVAL '1 hour'` : `AND created_at >= $2::date AND created_at < ($3::date + INTERVAL '1 day')`}
     GROUP BY message
     ORDER BY count DESC
     LIMIT 50
-  `, [websiteId, start, end]);
+  `, isLive ? [websiteId] : [websiteId, start, end]);
 
   const total = await query(`
     SELECT COUNT(DISTINCT message) AS count FROM error_logs
     WHERE website_id = $1
-      AND created_at >= $2::date AND created_at < ($3::date + INTERVAL '1 day')
-  `, [websiteId, start, end]);
+      ${isLive ? `AND created_at >= NOW() - INTERVAL '1 hour'` : `AND created_at >= $2::date AND created_at < ($3::date + INTERVAL '1 day')`}
+  `, isLive ? [websiteId] : [websiteId, start, end]);
 
   res.json({
     errors: result.rows,
@@ -52,6 +52,7 @@ router.get('/timeseries', authMiddleware, async (req: Request, res: Response) =>
 
   const start = (req.query.start as string) || (() => { const d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().split('T')[0]; })();
   const end = (req.query.end as string) || new Date().toISOString().split('T')[0];
+  const isLive = start === 'live';
 
   const result = await query(`
     SELECT
@@ -60,10 +61,10 @@ router.get('/timeseries', authMiddleware, async (req: Request, res: Response) =>
       COUNT(DISTINCT message) AS unique_errors
     FROM error_logs
     WHERE website_id = $1
-      AND created_at >= $2::date AND created_at < ($3::date + INTERVAL '1 day')
+      ${isLive ? `AND created_at >= NOW() - INTERVAL '1 hour'` : `AND created_at >= $2::date AND created_at < ($3::date + INTERVAL '1 day')`}
     GROUP BY DATE(created_at)
     ORDER BY DATE(created_at)
-  `, [websiteId, start, end]);
+  `, isLive ? [websiteId] : [websiteId, start, end]);
 
   res.json({ timeseries: result.rows });
 });

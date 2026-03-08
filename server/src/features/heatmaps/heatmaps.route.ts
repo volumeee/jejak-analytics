@@ -18,6 +18,7 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
 
   const start = (req.query.start as string) || (() => { const d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().split('T')[0]; })();
   const end = (req.query.end as string) || new Date().toISOString().split('T')[0];
+  const isLive = start === 'live';
 
   let sql = `
     SELECT x, y, COUNT(*) AS intensity
@@ -25,10 +26,9 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
     WHERE website_id = $1
       AND path = $2
       AND event_type = $3
-      AND created_at >= $4::date
-      AND created_at < ($5::date + INTERVAL '1 day')
+      ${isLive ? `AND created_at >= NOW() - INTERVAL '1 hour'` : `AND created_at >= $4::date AND created_at < ($5::date + INTERVAL '1 day')`}
   `;
-  const params: any[] = [websiteId, path, eventType, start, end];
+  const params: any[] = isLive ? [websiteId, path, eventType] : [websiteId, path, eventType, start, end];
 
   if (deviceType) {
     sql += ` AND device_type = $${params.length + 1}`;
@@ -57,6 +57,7 @@ router.get('/pages', authMiddleware, async (req: Request, res: Response) => {
 
   const start = (req.query.start as string) || (() => { const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().split('T')[0]; })();
   const end = (req.query.end as string) || new Date().toISOString().split('T')[0];
+  const isLive = start === 'live';
 
   // Merge page_views paths + heatmap_data paths for richer dropdown
   const result = await query(`
@@ -67,8 +68,7 @@ router.get('/pages', authMiddleware, async (req: Request, res: Response) => {
       FROM heatmap_data
       WHERE website_id = $1
         AND event_type = 'click'
-        AND created_at >= $2::date
-        AND created_at < ($3::date + INTERVAL '1 day')
+        ${isLive ? `AND created_at >= NOW() - INTERVAL '1 hour'` : `AND created_at >= $2::date AND created_at < ($3::date + INTERVAL '1 day')`}
         AND path IS NOT NULL
       GROUP BY path
 
@@ -78,15 +78,14 @@ router.get('/pages', authMiddleware, async (req: Request, res: Response) => {
       SELECT path, MAX(url) AS url, 0 AS clicks, COUNT(*) AS views
       FROM page_views
       WHERE website_id = $1
-        AND entered_at >= $2::date
-        AND entered_at < ($3::date + INTERVAL '1 day')
+        ${isLive ? `AND entered_at >= NOW() - INTERVAL '1 hour'` : `AND entered_at >= $2::date AND entered_at < ($3::date + INTERVAL '1 day')`}
         AND path IS NOT NULL
       GROUP BY path
     ) combined
     GROUP BY path
     ORDER BY clicks DESC, views DESC
     LIMIT 100
-  `, [websiteId, start, end]);
+  `, isLive ? [websiteId] : [websiteId, start, end]);
 
   res.json({ pages: result.rows });
 });

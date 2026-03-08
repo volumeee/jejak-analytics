@@ -32,34 +32,55 @@ export const useWebsiteStore = defineStore('website', () => {
   async function fetchWebsites() {
     const res = await api.get('/websites');
     websites.value = res.data.websites;
-    if (!current.value && websites.value.length > 0) {
-      current.value = websites.value[0];
+    
+    // Recovery script for hard-refresh
+    const savedId = localStorage.getItem('jj_last_website_id');
+    if (websites.value.length > 0) {
+      if (savedId) {
+        const found = websites.value.find(w => w.id === savedId);
+        current.value = found || websites.value[0];
+      } else {
+        current.value = websites.value[0];
+      }
     }
   }
 
   async function createWebsite(name: string, domain: string) {
     const res = await api.post('/websites', { name, domain });
     websites.value.unshift(res.data.website);
-    current.value = res.data.website;
+    selectWebsite(res.data.website); // Use selectWebsite to also trigger saving logic
     return res.data.website;
   }
 
   function selectWebsite(website: any) {
     current.value = website;
+    if (website && website.id) {
+        localStorage.setItem('jj_last_website_id', website.id);
+    }
   }
 
-  return { websites, current, currentId, fetchWebsites, createWebsite, selectWebsite };
+  async function deleteWebsite(id: string) {
+    await api.delete(`/websites/${id}`);
+    websites.value = websites.value.filter(w => w.id !== id);
+    if (current.value?.id === id) {
+      if (websites.value.length > 0) {
+        selectWebsite(websites.value[0]);
+      } else {
+        current.value = null;
+        localStorage.removeItem('jj_last_website_id');
+      }
+    }
+  }
+
+  return { websites, current, currentId, fetchWebsites, createWebsite, selectWebsite, deleteWebsite };
 });
 
 export const useDateStore = defineStore('date', () => {
-  const end = ref(new Date().toISOString().split('T')[0]);
-  const start = ref((() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 7);
-    return d.toISOString().split('T')[0];
-  })());
+  const end = ref('live');
+  const start = ref('live');
 
   const presets = [
+    { label: 'Live (Last 1 Hour)', days: -1 },
     { label: 'Today', days: 0 },
     { label: 'Last 7 days', days: 7 },
     { label: 'Last 30 days', days: 30 },
@@ -68,6 +89,13 @@ export const useDateStore = defineStore('date', () => {
   ];
 
   function setRange(days: number) {
+    localStorage.setItem('jj_last_date_days', days.toString());
+    
+    if (days === -1) {
+      start.value = 'live';
+      end.value = 'live';
+      return;
+    }
     end.value = new Date().toISOString().split('T')[0];
     if (days === 0) {
       start.value = end.value;
@@ -77,6 +105,11 @@ export const useDateStore = defineStore('date', () => {
       start.value = d.toISOString().split('T')[0];
     }
   }
+
+  // Restore preset from localStorage
+  const savedDays = localStorage.getItem('jj_last_date_days');
+  const initialDays = savedDays ? parseInt(savedDays) : -1;
+  setRange(initialDays);
 
   return { start, end, presets, setRange };
 });
